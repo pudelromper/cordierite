@@ -9,15 +9,15 @@ from collections import defaultdict
 REGISTRY = "docker://ghcr.io/ublue-os/"
 
 IMAGES = [
-    "bazzite",
+    "cordierite",
     "bazzite-gnome",
-    "bazzite-deck",
+    "cordierite-deck",
     "bazzite-deck-gnome",
-    "bazzite-deck-nvidia",
+    "cordierite-deck-nvidia",
     "bazzite-deck-nvidia-gnome",
-    "bazzite-nvidia",
+    "cordierite-nvidia",
     "bazzite-gnome-nvidia",
-    "bazzite-nvidia-open",
+    "cordierite-nvidia-open",
     "bazzite-gnome-nvidia-open",
 ]
 

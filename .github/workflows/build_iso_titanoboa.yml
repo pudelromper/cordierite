@@ -23,15 +23,15 @@ jobs:
       fail-fast: false
       matrix:
         image_name:
-          - bazzite
-          - bazzite-nvidia
-          - bazzite-nvidia-open
+          - cordierite
+          - cordierite-nvidia
+          - cordierite-nvidia-open
           - bazzite-gnome
           - bazzite-gnome-nvidia
           - bazzite-gnome-nvidia-open
-          - bazzite-deck
+          - cordierite-deck
           - bazzite-deck-gnome
-          - bazzite-deck-nvidia
+          - cordierite-deck-nvidia
           - bazzite-deck-nvidia-gnome
     steps:
       - name: Free Disk Space (Ubuntu)

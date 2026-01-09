@@ -44,18 +44,18 @@ jobs:
           GITHUB_TOKEN: ${{ github.token }}
           PREFIX: ghcr.io/${{ github.repository_owner }}/
           TAG_MAPPINGS: |-
-            bazzite:${{ inputs.old_tag }}                           => bazzite:latest,stable,${{ env.ver }}
-            bazzite-deck:${{ inputs.old_tag }}                      => bazzite-deck:latest,stable,${{ env.ver }}
+            cordierite:${{ inputs.old_tag }}                        => cordierite:latest,stable,${{ env.ver }}
+            cordierite-deck:${{ inputs.old_tag }}                   => cordierite-deck:latest,stable,${{ env.ver }}
             bazzite-deck-gnome:${{ inputs.old_tag }}                => bazzite-deck-gnome:latest,stable,${{ env.ver }}
-            bazzite-deck-nvidia:${{ inputs.old_tag }}               => bazzite-deck-nvidia:latest,stable,${{ env.ver }}
+            cordierite-deck-nvidia:${{ inputs.old_tag }}            => cordierite-deck-nvidia:latest,stable,${{ env.ver }}
             bazzite-deck-nvidia-gnome:${{ inputs.old_tag }}         => bazzite-deck-nvidia-gnome:latest,stable,${{ env.ver }}
             bazzite-gnome:${{ inputs.old_tag }}                     => bazzite-gnome:latest,stable,${{ env.ver }}
             bazzite-gnome-nvidia:${{ inputs.old_tag }}              => bazzite-gnome-nvidia:latest,stable,${{ env.ver }}
             bazzite-gnome-nvidia-open:${{ inputs.old_tag }}         => bazzite-gnome-nvidia-open:latest,stable,${{ env.ver }}
-            bazzite-nvidia:${{ inputs.old_tag }}                    => bazzite-nvidia:latest,stable,${{ env.ver }}
-            bazzite-nvidia-open:${{ inputs.old_tag }}               => bazzite-nvidia-open:latest,stable,${{ env.ver }}
+            cordierite-nvidia:${{ inputs.old_tag }}                 => cordierite-nvidia:latest,stable,${{ env.ver }}
+            cordierite-nvidia-open:${{ inputs.old_tag }}            => cordierite-nvidia-open:latest,stable,${{ env.ver }}
 
-            bazzite-asus-nvidia-open:${{ inputs.old_tag }}          => bazzite-asus-nvidia-open:latest,stable,${{ env.ver }}
-            bazzite-asus-nvidia:${{ inputs.old_tag }}               => bazzite-asus-nvidia:latest,stable,${{ env.ver }}
+            cordierite-asus-nvidia-open:${{ inputs.old_tag }}       => cordierite-asus-nvidia-open:latest,stable,${{ env.ver }}
+            cordierite-asus-nvidia:${{ inputs.old_tag }}            => cordierite-asus-nvidia:latest,stable,${{ env.ver }}
             bazzite-gnome-asus-nvidia-open:${{ inputs.old_tag }}    => bazzite-gnome-asus-nvidia-open:latest,stable,${{ env.ver }}
             bazzite-gnome-asus-nvidia:${{ inputs.old_tag }}         => bazzite-gnome-asus-nvidia:latest,stable,${{ env.ver }}

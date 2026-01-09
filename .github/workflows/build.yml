@@ -58,15 +58,15 @@ jobs:
       fail-fast: false
       matrix:
         image:
-          - bazzite
+          - cordierite
           - bazzite-gnome
-          - bazzite-deck
+          - cordierite-deck
           - bazzite-deck-gnome
-          - bazzite-deck-nvidia
+          - cordierite-deck-nvidia
           - bazzite-deck-nvidia-gnome
-          - bazzite-nvidia
+          - cordierite-nvidia
           - bazzite-gnome-nvidia
-          - bazzite-nvidia-open
+          - cordierite-nvidia-open
           - bazzite-gnome-nvidia-open
         include:
           - fedora_version: 43
@@ -94,20 +94,20 @@ jobs:
           # Define Container Target
           #
           if [[ "$IMAGE" == *"deck"* && "$IMAGE" == *"nvidia"* ]]; then
-            echo "container_target=bazzite-nvidia" >> "$GITHUB_OUTPUT"
-            echo "nvidia_base=bazzite-deck" >> "$GITHUB_OUTPUT"
+            echo "container_target=cordierite-nvidia" >> "$GITHUB_OUTPUT"
+            echo "nvidia_base=cordierite-deck" >> "$GITHUB_OUTPUT"
             echo "install_nvidia=true" >> "$GITHUB_OUTPUT"
           elif [[ "$IMAGE" == *"nvidia"* ]]; then
-            echo "container_target=bazzite-nvidia" >> "$GITHUB_OUTPUT"
-            echo "nvidia_base=bazzite" >> "$GITHUB_OUTPUT"
+            echo "container_target=cordierite-nvidia" >> "$GITHUB_OUTPUT"
+            echo "nvidia_base=cordierite" >> "$GITHUB_OUTPUT"
             echo "install_nvidia=true" >> "$GITHUB_OUTPUT"
           elif [[ "$IMAGE" == *"deck"* ]]; then
-            echo "container_target=bazzite-deck" >> "$GITHUB_OUTPUT"
-            echo "nvidia_base=bazzite-deck" >> "$GITHUB_OUTPUT" # NOOP
+            echo "container_target=cordierite-deck" >> "$GITHUB_OUTPUT"
+            echo "nvidia_base=cordierite-deck" >> "$GITHUB_OUTPUT" # NOOP
             echo "install_nvidia=false" >> "$GITHUB_OUTPUT"
           else
-            echo "container_target=bazzite" >> "$GITHUB_OUTPUT"
-            echo "nvidia_base=bazzite" >> "$GITHUB_OUTPUT" # NOOP
+            echo "container_target=cordierite" >> "$GITHUB_OUTPUT"
+            echo "nvidia_base=cordierite" >> "$GITHUB_OUTPUT" # NOOP
             echo "install_nvidia=false" >> "$GITHUB_OUTPUT"
           fi
           # Nvidia driver version to use
