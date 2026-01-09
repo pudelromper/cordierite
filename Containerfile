@@ -126,6 +126,8 @@ RUN --mount=type=cache,dst=/var/cache \
         libwacom-surface && \
     dnf5 -y remove \
         pipewire-config-raop && \
+    dnf5 -y config-manager setopt excludepkgs=NetworkManager-openvpn && \
+    rm -f /usr/lib/sysusers.d/nm-openvpn-sysusers.conf && \
     declare -A toswap=( \
         ["copr:copr.fedorainfracloud.org:ublue-os:bazzite"]="wireplumber" \
         ["copr:copr.fedorainfracloud.org:ublue-os:bazzite-multilib"]="pipewire bluez xorg-x11-server-Xwayland NetworkManager" \
@@ -225,7 +227,6 @@ RUN --mount=type=cache,dst=/var/cache \
         i2c-tools \
         lm_sensors \
         fw-ectool \
-        fw-fanctrl \
         framework-system \
         udica \
         ladspa-caps-plugins \
@@ -278,6 +279,10 @@ RUN --mount=type=cache,dst=/var/cache \
     mkdir -p /usr/lib/extest/ && \
     /ctx/ghcurl "$(/ctx/ghcurl https://api.github.com/repos/ublue-os/extest/releases/latest | jq -r '.assets[] | select(.name| test(".*so$")).browser_download_url')" -Lo /usr/lib/extest/libextest.so && \
     chmod +x /usr/bin/framework_tool && \
+    git clone --depth 1 https://github.com/TamtamHero/fw-fanctrl.git /tmp/fw-fanctrl && \
+    pip install --prefix=/usr build && \
+    cd /tmp/fw-fanctrl && ./install.sh --no-ectool --no-post-install --prefix-dir /usr && cd / && \
+    rm -rf /tmp/fw-fanctrl && \
     sed -i 's|uupd|& --disable-module-distrobox|' /usr/lib/systemd/system/uupd.service && \
     dnf5 -y --setopt=install_weak_deps=False install \
         rocm-hip \
@@ -287,7 +292,8 @@ RUN --mount=type=cache,dst=/var/cache \
     mkdir -p /etc/xdg/autostart && \
     sed -i~ -E 's/=.\$\(command -v (nft|ip6?tables-legacy).*/=/g' /usr/lib/waydroid/data/scripts/waydroid-net.sh && \
     sed -i 's/ --xdg-runtime=\\"${XDG_RUNTIME_DIR}\\"//g' /usr/bin/btrfs-assistant-launcher && \
-    dnf5 -y install netbird netbird-ui && \
+    dnf5 -y --setopt=tsflags=noscripts install netbird && \
+    dnf5 -y install netbird-ui && \
     /ctx/cleanup
 
 # Install Steam & Lutris, plus supporting packages
@@ -516,7 +522,7 @@ RUN --mount=type=cache,dst=/var/cache \
         dnf5 -y copr disable $copr; \
     done && unset -v copr && \
     eval "$(/ctx/dnf5-setopt setopt '*negativo17*' enabled=0)" && \
-    sed -i 's#/var/lib/selinux#/etc/selinux#g' /usr/lib/python3.*/site-packages/setroubleshoot/util.py && \
+    { sed -i 's#/var/lib/selinux#/etc/selinux#g' /usr/lib/python3.*/site-packages/setroubleshoot/util.py 2>/dev/null || true; } && \
     sed -i 's/power-saver=powersave$/power-saver=powersave-bazzite/' /etc/tuned/ppd.conf && \
     sed -i 's/balanced=balanced$/balanced=balanced-bazzite/' /etc/tuned/ppd.conf && \
     sed -i 's/performance=throughput-performance$/performance=throughput-performance-bazzite/' /etc/tuned/ppd.conf && \

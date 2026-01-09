@@ -1,0 +1,16 @@
+[Unit]
+Description=NetBird Agent
+Documentation=https://netbird.io/docs
+After=network-online.target NetworkManager.service
+Wants=network-online.target
+
+[Service]
+Type=simple
+ExecStartPre=/bin/mkdir -p /var/log/netbird
+ExecStart=/usr/bin/netbird service run --log-file /var/log/netbird/client.log --daemon-addr unix:///var/run/netbird.sock
+Restart=on-failure
+RestartSec=5
+TimeoutStopSec=10
+
+[Install]
+WantedBy=multi-user.target
