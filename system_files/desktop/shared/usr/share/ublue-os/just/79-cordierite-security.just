@@ -274,6 +274,5 @@ security-status:
     echo "Use 'ujust set-container-userns' to toggle container domain"
     echo "Use 'ujust set-cups-service' to toggle CUPS printing"
 
-# Display current user namespace security status (alias for backwards compatibility)
-[group("security")]
-userns-status: security-status
+# Alias for backwards compatibility
+alias userns-status := security-status
