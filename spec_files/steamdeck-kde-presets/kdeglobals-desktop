@@ -3,6 +3,7 @@ LookAndFeelPackage=org.kde.breeze.desktop
 SingleClick=false
 
 [General]
+ColorScheme=Cordierite
 TerminalApplication=kde-ptyxis
 TerminalService=org.gnome.Ptyxis.desktop
 fixed=Fira Code,10,-1,5,50,0,0,0,0,0

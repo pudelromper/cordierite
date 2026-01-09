@@ -17,6 +17,7 @@ Source4:        metadata_vapor.json
 Source5:        metadata_vgui2.json
 Source6:        plasmarc
 Source7:        plasma-org.kde.plasma.desktop-appletsrc
+Source8:        Cordierite.colors
 Patch0:         multiuser.patch
 Patch1:         lockscreen.patch
 Patch2:         bazzite_logo.patch
@@ -83,6 +84,7 @@ cp %{SOURCE3} %{buildroot}%{_datadir}/plasma/look-and-feel/com.valve.vapor.deskt
 cp %{SOURCE3} %{buildroot}%{_datadir}/plasma/look-and-feel/com.valve.vgui.desktop/contents/splash/images/bazzite_logo.svgz
 cp %{SOURCE4} %{buildroot}%{_datadir}/plasma/look-and-feel/com.valve.vapor.desktop/metadata.json
 cp %{SOURCE5} %{buildroot}%{_datadir}/plasma/look-and-feel/com.valve.vgui.desktop/metadata.json
+cp %{SOURCE8} %{buildroot}%{_datadir}/color-schemes/Cordierite.colors
 
 # Do post-installation
 %post
@@ -97,6 +99,7 @@ cp %{SOURCE5} %{buildroot}%{_datadir}/plasma/look-and-feel/com.valve.vgui.deskto
 # are going to be installed into target system where the rpm is installed.
 %files
 %{_bindir}/steamos-add-to-steam
+%{_datadir}/color-schemes/Cordierite.colors
 %{_datadir}/color-schemes/Vapor.colors
 %{_datadir}/color-schemes/VGUI.colors
 %{_datadir}/icons/*
