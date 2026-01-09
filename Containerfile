@@ -126,6 +126,7 @@ RUN --mount=type=cache,dst=/var/cache \
         libwacom-surface && \
     dnf5 -y remove \
         pipewire-config-raop && \
+    dnf5 -y config-manager setopt excludepkgs=NetworkManager-openvpn && \
     declare -A toswap=( \
         ["copr:copr.fedorainfracloud.org:ublue-os:bazzite"]="wireplumber" \
         ["copr:copr.fedorainfracloud.org:ublue-os:bazzite-multilib"]="pipewire bluez xorg-x11-server-Xwayland NetworkManager" \
