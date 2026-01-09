@@ -373,7 +373,9 @@ RUN --mount=type=cache,dst=/var/cache \
         setcap 'cap_net_raw+ep' /usr/libexec/ksysguard/ksgrd_network_helper && \
         ln -sf /usr/share/wallpapers/convergence.jxl /usr/share/backgrounds/default.jxl && \
         ln -sf /usr/share/wallpapers/convergence.jxl /usr/share/backgrounds/default-dark.jxl && \
-        rm -f /usr/share/backgrounds/default.xml \
+        rm -f /usr/share/backgrounds/default.xml && \
+        chmod +x /usr/libexec/cordierite-security-settings && \
+        chmod +x /usr/libexec/cordierite-security-helper \
     ; else \
         declare -A toswap=( \
             ["copr:copr.fedorainfracloud.org:ublue-os:bazzite-multilib"]="gsettings-desktop-schemas mutter gnome-shell" \
@@ -541,6 +543,7 @@ RUN --mount=type=cache,dst=/var/cache \
     systemctl enable greenboot-healthcheck.service && \
     systemctl enable greenboot-set-rollback-trigger.service && \
     systemctl disable force-wol.service && \
+    systemctl disable cups.socket cups.service cups.path && \
     systemctl --global enable bazzite-dynamic-fixes.service && \
     /ctx/ghcurl "https://raw.githubusercontent.com/doitsujin/dxvk/master/dxvk.conf" -Lo /etc/dxvk-example.conf && \
     /ctx/ghcurl "https://raw.githubusercontent.com/ublue-os/waydroid-scripts/main/waydroid-choose-gpu.sh" -Lo /usr/bin/waydroid-choose-gpu && \

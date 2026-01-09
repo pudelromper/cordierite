@@ -161,23 +161,83 @@ set-unconfined-userns ACTION="":
             ;;
     esac
 
-# Display current user namespace security status
+# Toggle CUPS printing service
 [group("security")]
-userns-status:
+set-cups-service ACTION="":
     #!/usr/bin/bash
     source /usr/lib/ujust/ujust.sh
 
-    echo "${bold}User Namespace Security Status${normal}"
+    # Check current status
+    CURRENT_STATUS="unknown"
+    if systemctl is-enabled cups.socket 2>/dev/null | grep -q "enabled"; then
+        CURRENT_STATUS="enabled"
+    elif systemctl is-enabled cups.socket 2>/dev/null | grep -q "disabled"; then
+        CURRENT_STATUS="disabled"
+    fi
+
+    OPTION="{{ ACTION }}"
+    if [ "$OPTION" == "help" ]; then
+        echo "Usage: ujust set-cups-service <on|off>"
+        echo ""
+        echo "Controls the CUPS printing service."
+        echo ""
+        echo "  on  - Enable CUPS (required for printing)"
+        echo "  off - Disable CUPS (more secure if you don't need printing)"
+        echo ""
+        echo "Current status: CUPS is ${CURRENT_STATUS}"
+        echo ""
+        echo "${yellow}Note: CUPS has had security vulnerabilities. Disable if not needed.${normal}"
+        exit 0
+    elif [ -z "$OPTION" ]; then
+        echo "${bold}CUPS Printing Service Configuration${normal}"
+        echo ""
+        echo "CUPS provides printing support but has historically had security issues."
+        echo "Disable it if you don't need to print from this system."
+        echo ""
+        if [ "$CURRENT_STATUS" == "enabled" ]; then
+            echo "Current status: ${yellow}Enabled${normal}"
+        else
+            echo "Current status: ${green}Disabled${normal} (more secure)"
+        fi
+        echo ""
+        OPTION=$(ugum choose "on - Enable (for printing)" "off - Disable (secure)" "Exit without changes")
+    fi
+
+    case "$OPTION" in
+        on*|enable*)
+            echo "Enabling CUPS printing service..."
+            sudo systemctl enable --now cups.socket cups.service 2>/dev/null || true
+            echo "${yellow}CUPS is now enabled.${normal}"
+            echo "You can now use printers."
+            ;;
+        off*|disable*)
+            echo "Disabling CUPS printing service..."
+            sudo systemctl disable --now cups.socket cups.service cups.path 2>/dev/null || true
+            echo "${green}CUPS is now disabled.${normal}"
+            echo "Printing will not work until re-enabled."
+            ;;
+        *)
+            echo "No changes made."
+            ;;
+    esac
+
+# Display current security status
+[group("security")]
+security-status:
+    #!/usr/bin/bash
+    source /usr/lib/ujust/ujust.sh
+
+    echo "${bold}Cordierite Security Status${normal}"
     echo ""
 
-    # Check unconfined status
+    # Check unconfined userns status
     if semodule -l 2>/dev/null | grep -q "^cordierite-deny-unconfined-userns"; then
         echo "Unconfined domain userns: ${green}Denied${normal} (secure)"
     else
         echo "Unconfined domain userns: ${yellow}Allowed${normal}"
     fi
 
-    # Check container status
+    # Check container userns status
     if semodule -l 2>/dev/null | grep -q "^cordierite-deny-container-userns"; then
         echo "Container domain userns:  ${green}Denied${normal} (secure)"
     else
@@ -191,6 +251,31 @@ userns-status:
         echo "Flatpak domain userns:    Uses system default"
     fi
 
+    # Check CUPS status
+    echo ""
+    if systemctl is-enabled cups.socket 2>/dev/null | grep -q "enabled"; then
+        echo "CUPS printing service:    ${yellow}Enabled${normal}"
+    else
+        echo "CUPS printing service:    ${green}Disabled${normal} (secure)"
+    fi
+
+    # Show ptrace status
+    PTRACE_SCOPE=$(cat /proc/sys/kernel/yama/ptrace_scope 2>/dev/null || echo "unknown")
+    case "$PTRACE_SCOPE" in
+        0) echo "Ptrace scope:             ${red}Classic${normal} (insecure)" ;;
+        1) echo "Ptrace scope:             ${yellow}Restricted${normal}" ;;
+        2) echo "Ptrace scope:             ${green}Admin-only${normal} (secure)" ;;
+        3) echo "Ptrace scope:             ${green}No attach${normal} (most secure)" ;;
+        *) echo "Ptrace scope:             Unknown" ;;
+    esac
+
     echo ""
     echo "Use 'ujust set-unconfined-userns' to toggle unconfined domain"
     echo "Use 'ujust set-container-userns' to toggle container domain"
+    echo "Use 'ujust set-cups-service' to toggle CUPS printing"
+
+# Display current user namespace security status (alias for backwards compatibility)
+[group("security")]
+userns-status:
+    #!/usr/bin/bash
+    ujust security-status

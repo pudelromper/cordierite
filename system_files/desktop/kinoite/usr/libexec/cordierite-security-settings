@@ -1,0 +1,155 @@
+#!/usr/bin/bash
+# Cordierite Security Settings - KDE GUI
+# Provides graphical toggles for security features
+
+# Source ujust helpers for colors
+source /usr/lib/ujust/ujust.sh 2>/dev/null || true
+
+# Helper function to get current userns status
+get_userns_status() {
+    if semodule -l 2>/dev/null | grep -q "^cordierite-deny-unconfined-userns"; then
+        echo "denied"
+    else
+        echo "allowed"
+    fi
+}
+
+# Helper function to get current CUPS status
+get_cups_status() {
+    if systemctl is-enabled cups.socket 2>/dev/null | grep -q "enabled"; then
+        echo "enabled"
+    else
+        echo "disabled"
+    fi
+}
+
+# Toggle unconfined userns
+toggle_userns() {
+    local current_status=$(get_userns_status)
+    local action
+
+    if [ "$current_status" == "allowed" ]; then
+        action="off"
+        kdialog --title "Security Settings" --passivepopup "Restricting user namespaces..." 3
+    else
+        action="on"
+        kdialog --title "Security Settings" --passivepopup "Allowing user namespaces..." 3
+    fi
+
+    pkexec /usr/libexec/cordierite-security-helper userns "$action"
+
+    local new_status=$(get_userns_status)
+    if [ "$new_status" == "denied" ]; then
+        kdialog --title "Security Settings" --passivepopup "User namespaces are now restricted (more secure)" 5
+    else
+        kdialog --title "Security Settings" --passivepopup "User namespaces are now allowed" 5
+    fi
+}
+
+# Toggle CUPS
+toggle_cups() {
+    local current_status=$(get_cups_status)
+    local action
+
+    if [ "$current_status" == "enabled" ]; then
+        action="off"
+        kdialog --title "Security Settings" --passivepopup "Disabling CUPS printing..." 3
+    else
+        action="on"
+        kdialog --title "Security Settings" --passivepopup "Enabling CUPS printing..." 3
+    fi
+
+    pkexec /usr/libexec/cordierite-security-helper cups "$action"
+
+    local new_status=$(get_cups_status)
+    if [ "$new_status" == "disabled" ]; then
+        kdialog --title "Security Settings" --passivepopup "CUPS printing is now disabled (more secure)" 5
+    else
+        kdialog --title "Security Settings" --passivepopup "CUPS printing is now enabled" 5
+    fi
+}
+
+# Build status text
+build_status() {
+    local userns_status=$(get_userns_status)
+    local cups_status=$(get_cups_status)
+    local ptrace_scope=$(cat /proc/sys/kernel/yama/ptrace_scope 2>/dev/null || echo "?")
+
+    local userns_text cups_text ptrace_text
+
+    if [ "$userns_status" == "denied" ]; then
+        userns_text="User Namespaces: Restricted (secure)"
+    else
+        userns_text="User Namespaces: Allowed"
+    fi
+
+    if [ "$cups_status" == "disabled" ]; then
+        cups_text="CUPS Printing: Disabled (secure)"
+    else
+        cups_text="CUPS Printing: Enabled"
+    fi
+
+    case "$ptrace_scope" in
+        0) ptrace_text="Ptrace: Classic (insecure)" ;;
+        1) ptrace_text="Ptrace: Restricted" ;;
+        2) ptrace_text="Ptrace: Admin-only (secure)" ;;
+        3) ptrace_text="Ptrace: No attach (most secure)" ;;
+        *) ptrace_text="Ptrace: Unknown" ;;
+    esac
+
+    echo "$userns_text|$cups_text|$ptrace_text"
+}
+
+# Main menu
+show_main_menu() {
+    local status=$(build_status)
+    local userns_text=$(echo "$status" | cut -d'|' -f1)
+    local cups_text=$(echo "$status" | cut -d'|' -f2)
+    local ptrace_text=$(echo "$status" | cut -d'|' -f3)
+
+    local userns_status=$(get_userns_status)
+    local cups_status=$(get_cups_status)
+
+    # Build menu items with current state
+    local userns_action cups_action
+    if [ "$userns_status" == "denied" ]; then
+        userns_action="Allow User Namespaces"
+    else
+        userns_action="Restrict User Namespaces"
+    fi
+
+    if [ "$cups_status" == "disabled" ]; then
+        cups_action="Enable CUPS Printing"
+    else
+        cups_action="Disable CUPS Printing"
+    fi
+
+    local choice
+    choice=$(kdialog --title "Cordierite Security Settings" \
+        --menu "Current Status:\n$userns_text\n$cups_text\n$ptrace_text\n\nSelect an action:" \
+        "userns" "$userns_action" \
+        "cups" "$cups_action" \
+        "status" "View Detailed Status" \
+        2>/dev/null)
+
+    case "$choice" in
+        userns)
+            toggle_userns
+            show_main_menu
+            ;;
+        cups)
+            toggle_cups
+            show_main_menu
+            ;;
+        status)
+            ujust security-status 2>&1 | kdialog --title "Security Status" --textbox - 500 400
+            show_main_menu
+            ;;
+        *)
+            exit 0
+            ;;
+    esac
+}
+
+# Entry point
+show_main_menu

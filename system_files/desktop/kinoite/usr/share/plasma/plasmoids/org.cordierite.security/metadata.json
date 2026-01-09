@@ -1,0 +1,24 @@
+{
+    "KPlugin": {
+        "Authors": [
+            {
+                "Email": "",
+                "Name": "Cordierite"
+            }
+        ],
+        "Category": "System Information",
+        "Description": "Quick access to Cordierite security settings",
+        "Icon": "security-high",
+        "Id": "org.cordierite.security",
+        "License": "Apache-2.0",
+        "Name": "Security Settings",
+        "Version": "1.0",
+        "Website": "https://github.com/pudelromper/cordierite"
+    },
+    "X-Plasma-API": "declarativeappletscript",
+    "X-Plasma-API-Minimum-Version": "6.0",
+    "X-Plasma-MainScript": "ui/main.qml",
+    "X-Plasma-NotificationArea": "true",
+    "X-Plasma-NotificationAreaCategory": "SystemServices",
+    "X-Plasma-DBusActivationService": ""
+}
