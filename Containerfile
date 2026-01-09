@@ -74,7 +74,6 @@ RUN --mount=type=cache,dst=/var/cache \
         ublue-os/bazzite-multilib \
         ublue-os/staging \
         ublue-os/packages \
-        ublue-os/obs-vkcapture \
         ycollet/audinux \
         ublue-os/rom-properties \
         ublue-os/hhd \
@@ -251,7 +250,6 @@ RUN --mount=type=cache,dst=/var/cache \
         rar \
         libxcrypt-compat \
         vulkan-tools \
-        xwiimote-ng \
         fastfetch \
         glow \
         gum \
@@ -299,26 +297,13 @@ RUN --mount=type=cache,dst=/var/cache \
     --mount=type=tmpfs,dst=/tmp \
     --mount=type=secret,id=GITHUB_TOKEN \
     dnf5 -y install \
-        gamescope.x86_64 \
-        gamescope-libs.x86_64 \
-        gamescope-libs.i686 \
-        gamescope-shaders \
         jupiter-sd-mounting-btrfs \
         umu-launcher \
         dbus-x11 \
         xdg-user-dirs \
         gobject-introspection \
         libFAudio.x86_64 \
-        libFAudio.i686 \
-        vkBasalt.x86_64 \
-        vkBasalt.i686 \
-        mangohud.x86_64 \
-        mangohud.i686 \
-        libobs_vkcapture.x86_64 \
-        libobs_glcapture.x86_64 \
-        libobs_vkcapture.i686 \
-        libobs_glcapture.i686 \
-        openxr && \
+        libFAudio.i686 && \
     dnf5 -y --setopt=install_weak_deps=False install \
         steam \
         lutris && \
@@ -511,7 +496,6 @@ RUN --mount=type=cache,dst=/var/cache \
         ublue-os/bazzite-multilib \
         ublue-os/staging \
         ublue-os/packages \
-        ublue-os/obs-vkcapture \
         ycollet/audinux \
         ublue-os/rom-properties \
         ublue-os/hhd \
@@ -586,7 +570,6 @@ RUN --mount=type=cache,dst=/var/cache \
     dnf5 -y copr enable ublue-os/packages && \
     dnf5 -y copr enable ublue-os/bazzite && \
     dnf5 -y copr enable ublue-os/bazzite-multilib && \
-    dnf5 -y copr enable ublue-os/obs-vkcapture && \
     dnf5 -y copr enable ublue-os/hhd && \
     dnf5 -y copr enable ycollet/audinux && \
     dnf5 config-manager unsetopt skip_if_unavailable && \
@@ -703,7 +686,6 @@ RUN --mount=type=cache,dst=/var/cache \
         ublue-os/packages \
         ublue-os/bazzite \
         ublue-os/bazzite-multilib \
-        ublue-os/obs-vkcapture \
         ublue-os/hhd \
         ycollet/audinux; \
     do \
