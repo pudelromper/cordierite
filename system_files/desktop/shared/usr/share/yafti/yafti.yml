@@ -1,6 +1,6 @@
 title: Cordierite Portal
 screens:
-  - title: "Setting up Cordierite"
+  - title: "Let's get poodling"
     description: "Core system components and utilities"
     actions:
       - id: "decky-loader"
@@ -121,7 +121,7 @@ screens:
         description: "Live TV streaming service"
         default: false
         script: "ujust get-media-app \"YouTube TV\""
-  - title: "Customizations and Tweaks"
+  - title: "Noodling and Tweaks"
     description: "System configurations and enhancements"
     actions:
       - id: "add-input-group"

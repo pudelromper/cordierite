@@ -6,4 +6,4 @@ BTRFS is used by default for internal drives, and we recommend BTRFS for externa
 Cordierite uses ZSTD compression in BTRFS by default, and deduplicates files across your entire drive. **More space for your stuff!**
 *Have a large library of ROMs to manage?* ROM Properties Page shell extension is installed by default and makes it much easier, with thumbnails and additional info for all of your files
 *Need more control over your Flatpaks?* Check out the Warehouse and Flatseal applications to manage them
-The `bazzite-rollback-helper` command can guide you for rolling back or rebasing to older Cordierite builds
+The `bazzite-rollback-helper` command can guide you for rolling back or rebasing to older Cordierite builds. Happy poodling!
