@@ -16,6 +16,7 @@ Source3:        bazzite_logo.svgz
 Source4:        metadata_vapor.json
 Source5:        metadata_vgui2.json
 Source6:        plasmarc
+Source7:        plasma-org.kde.plasma.desktop-appletsrc
 Patch0:         multiuser.patch
 Patch1:         lockscreen.patch
 Patch2:         bazzite_logo.patch
@@ -75,6 +76,7 @@ rm %{buildroot}%{_sysconfdir}/xdg/baloofilerc
 rm %{buildroot}%{_sysconfdir}/xdg/kdeglobals
 rm %{buildroot}%{_sysconfdir}/xdg/kcm-about-distrorc
 cp %{SOURCE1} %{buildroot}%{_sysconfdir}/xdg/kdeglobals
+cp %{SOURCE7} %{buildroot}%{_sysconfdir}/xdg/plasma-org.kde.plasma.desktop-appletsrc
 rm %{buildroot}%{_datadir}/plasma/look-and-feel/com.valve.vapor.desktop/contents/splash/images/deck_logo.svgz
 rm %{buildroot}%{_datadir}/plasma/look-and-feel/com.valve.vgui.desktop/contents/splash/images/deck_logo.svgz
 cp %{SOURCE3} %{buildroot}%{_datadir}/plasma/look-and-feel/com.valve.vapor.desktop/contents/splash/images/bazzite_logo.svgz
@@ -110,6 +112,7 @@ cp %{SOURCE5} %{buildroot}%{_datadir}/plasma/look-and-feel/com.valve.vgui.deskto
 %{_sysconfdir}/xdg/gtk-3.0/settings.ini
 %{_sysconfdir}/xdg/kdeglobals
 %{_sysconfdir}/xdg/ktrashrc
+%{_sysconfdir}/xdg/plasma-org.kde.plasma.desktop-appletsrc
 
 # Finally, changes from the latest release of your application are generated from
 # your project's Git history. It will be empty until you make first annotated Git tag.

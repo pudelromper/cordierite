@@ -1,5 +1,5 @@
 [KDE]
-LookAndFeelPackage=com.valve.vapor.desktop
+LookAndFeelPackage=org.kde.breeze.desktop
 SingleClick=false
 
 [General]
