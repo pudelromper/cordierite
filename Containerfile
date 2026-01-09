@@ -86,7 +86,6 @@ RUN --mount=type=cache,dst=/var/cache \
         dnf5 -y config-manager setopt copr:copr.fedorainfracloud.org:${copr////:}.priority=98 ;\
     done && unset -v copr && \
     dnf5 -y install --nogpgcheck --repofrompath 'terra,https://repos.fyralabs.com/terra$releasever' terra-release{,-extras,-mesa} && \
-    dnf5 -y config-manager addrepo --overwrite --from-repofile=https://pkgs.tailscale.com/stable/fedora/tailscale.repo && \
     printf '[netbird]\nname=netbird\nbaseurl=https://pkgs.netbird.io/yum/\nenabled=1\ngpgcheck=0\ngpgkey=https://pkgs.netbird.io/yum/repodata/repomd.xml.key\nrepo_gpgcheck=1\n' > /etc/yum.repos.d/netbird.repo && \
     dnf5 -y install \
         https://mirrors.rpmfusion.org/free/fedora/rpmfusion-free-release-$(rpm -E %fedora).noarch.rpm \
@@ -236,7 +235,6 @@ RUN --mount=type=cache,dst=/var/cache \
         ladspa-noise-suppression-for-voice \
         pipewire-module-filter-chain-sofa \
         python3-icoextract \
-        tailscale \
         netbird-ui \
         webapp-manager \
         btop \
@@ -382,7 +380,7 @@ RUN --mount=type=cache,dst=/var/cache \
             kde-partitionmanager \
             plasma-discover \
             konsole && \
-        sed -i '/<entry name="launchers" type="StringList">/,/<\/entry>/ s/<default>[^<]*<\/default>/<default>preferred:\/\/browser,applications:steam.desktop,applications:net.lutris.Lutris.desktop,applications:org.gnome.Ptyxis.desktop,applications:io.github.kolunmi.Bazaar.desktop,preferred:\/\/filemanager<\/default>/' /usr/share/plasma/plasmoids/org.kde.plasma.taskmanager/contents/config/main.xml && \
+        sed -i '/<entry name="launchers" type="StringList">/,/<\/entry>/ s/<default>[^<]*<\/default>/<default>preferred:\/\/browser,applications:com.vivaldi.Vivaldi.desktop,applications:md.obsidian.Obsidian.desktop,applications:org.zotero.Zotero.desktop,applications:net.lutris.Lutris.desktop,applications:org.gnome.Ptyxis.desktop,applications:io.github.kolunmi.Bazaar.desktop,preferred:\/\/filemanager<\/default>/' /usr/share/plasma/plasmoids/org.kde.plasma.taskmanager/contents/config/main.xml && \
         sed -i 's@\[Desktop Action new-window\]@\[Desktop Action new-window\]\nX-KDE-Shortcuts=Ctrl+Alt+T@g' /usr/share/applications/org.gnome.Ptyxis.desktop && \
         sed -i '/^Comment/d' /usr/share/applications/org.gnome.Ptyxis.desktop && \
         sed -i 's@Exec=ptyxis@Exec=kde-ptyxis@g' /usr/share/applications/org.gnome.Ptyxis.desktop && \
@@ -511,8 +509,6 @@ RUN --mount=type=cache,dst=/var/cache \
         fedora-cisco-openh264 \
         fedora-steam \
         fedora-rar \
-        google-chrome \
-        tailscale \
         netbird \
         _copr_ublue-os-akmods \
         terra \
@@ -552,7 +548,6 @@ RUN --mount=type=cache,dst=/var/cache \
     systemctl enable uupd.timer && \
     systemctl enable incus-workaround.service && \
     systemctl enable bazzite-hardware-setup.service && \
-    systemctl disable tailscaled.service && \
     systemctl enable netbird.service && \
     systemctl enable dev-hugepages1G.mount && \
     systemctl enable ds-inhibit.service && \
