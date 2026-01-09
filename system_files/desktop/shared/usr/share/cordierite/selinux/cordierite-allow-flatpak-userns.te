@@ -1,0 +1,20 @@
+module cordierite-allow-flatpak-userns 1.0;
+
+# This module explicitly allows user namespace creation for Flatpak
+# This ensures Flatpak applications can create sandboxes even when
+# userns is restricted for other domains
+
+require {
+    type flatpak_t;
+    type flatpak_helper_t;
+    class user_namespace create;
+    class cap_userns { sys_admin sys_chroot sys_ptrace };
+}
+
+# Allow flatpak_t to create user namespaces
+allow flatpak_t self:user_namespace create;
+allow flatpak_t self:cap_userns { sys_admin sys_chroot sys_ptrace };
+
+# Allow flatpak_helper_t to create user namespaces
+allow flatpak_helper_t self:user_namespace create;
+allow flatpak_helper_t self:cap_userns { sys_admin sys_chroot sys_ptrace };

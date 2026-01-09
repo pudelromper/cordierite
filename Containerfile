@@ -448,6 +448,7 @@ RUN --mount=type=cache,dst=/var/cache \
     sed -i 's/#UserspaceHID.*/UserspaceHID=true/' /etc/bluetooth/input.conf && \
     sed -i "s|grub_probe\} --target=device /\`|grub_probe} --target=device /sysroot\`|g" /usr/bin/grub2-mkconfig && \
     rm -f /usr/lib/systemd/system/service.d/50-keep-warm.conf && \
+    echo "import \"/usr/share/ublue-os/just/79-cordierite-security.just\"" >> /usr/share/ublue-os/justfile && \
     echo "import \"/usr/share/ublue-os/just/80-bazzite.just\"" >> /usr/share/ublue-os/justfile && \
     echo "import \"/usr/share/ublue-os/just/81-bazzite-fixes.just\"" >> /usr/share/ublue-os/justfile && \
     echo "import \"/usr/share/ublue-os/just/82-bazzite-apps.just\"" >> /usr/share/ublue-os/justfile && \
@@ -548,6 +549,14 @@ RUN --mount=type=cache,dst=/var/cache \
     /ctx/ghcurl "https://github.com/ublue-os/toolboxes/raw/refs/heads/main/apps/docker/distrobox.ini" -Lo /etc/distrobox/docker.ini && \
     /ctx/ghcurl "https://github.com/ublue-os/toolboxes/raw/refs/heads/main/apps/incus/distrobox.ini" -Lo /etc/distrobox/incus.ini && \
     /ctx/ghcurl "https://raw.githubusercontent.com/ublue-os/bash-preexec/master/bash-preexec.sh" -Lo /usr/share/bash-prexec && \
+    dnf5 -y install checkpolicy && \
+    for te_file in /usr/share/cordierite/selinux/*.te; do \
+        mod_name=$(basename "$te_file" .te); \
+        checkmodule -M -m -o "/usr/share/cordierite/selinux/${mod_name}.mod" "$te_file" && \
+        semodule_package -o "/usr/share/cordierite/selinux/${mod_name}.pp" -m "/usr/share/cordierite/selinux/${mod_name}.mod" && \
+        rm -f "/usr/share/cordierite/selinux/${mod_name}.mod"; \
+    done && \
+    dnf5 -y remove checkpolicy && \
     /ctx/image-info && \
     /ctx/build-initramfs && \
     /ctx/finalize
