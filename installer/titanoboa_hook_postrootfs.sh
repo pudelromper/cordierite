@@ -67,7 +67,7 @@ hidden_webui_pages =
 use_geolocation = False
 EOF
 
-echo "Bazzite release $VERSION_ID ($VERSION_CODENAME)" >/etc/system-release
+echo "Cordierite release $VERSION_ID ($VERSION_CODENAME)" >/etc/system-release
 
 # Get Artwork
 git clone --depth 1 --quiet https://github.com/ublue-os/bazzite.git /root/packages
@@ -348,7 +348,7 @@ if [[ $PKEXEC_UID -eq 0 ]]; then
     die "You must not execute this script as root."
 fi
 
-_APP_NAME="Bazzite Bootloader Restoring Tool"
+_APP_NAME="Cordierite Bootloader Restoring Tool"
 DRY_RUN=${DRY_RUN:-0}
 MNT=/tmp/mnt
 trap 'umount --recursive $MNT/boot 2>/dev/null' EXIT
@@ -358,7 +358,7 @@ DISK_PATH=$(lsblk -d -n -o NAME,SIZE,MODEL | while read -r name size model; do
     echo "$size"
     echo "$model"
 done | yad --list --no-buttons \
-    --text="Double-click the disk where you installed Bazzite:" --width=500 --height=300 \
+    --text="Double-click the disk where you installed Cordierite:" --width=500 --height=300 \
     --column="Device" \
     --column="Size" \
     --column="Model" \
@@ -421,7 +421,7 @@ cat >/usr/share/applications/bazzite_bootloader_restoring_tool.desktop <<'EOF'
 [Desktop Entry]
 Type=Application
 Icon=tools-wizard-symbolic
-Name=Bazzite Bootloader Restoring Tool BETA
+Name=Cordierite Bootloader Restoring Tool BETA
 Comment=Restore the bootloader of an installation if has been overriden by Windows
 Keywords=bootloader;fix;grub;windows
 Categories=System;Utility
@@ -513,8 +513,8 @@ while [[ $_EXITLOCK -eq 1 ]]; do
         --text-align=center \
         --buttons-layout=center \
         --title="Welcome" \
-        --text="\nWelcome to the Live ISO for Bazzite\!\n\nThe Live ISO is designed for installation and troubleshooting.\nBecause of this, it is <b>not capable of playing games.</b>\n\nPlease do not use it for benchmarks as it\ndoes not represent the installed experience.\n" \
-        --button="Install Bazzite":10 \
+        --text="\nWelcome to the Live ISO for Cordierite\!\n\nThe Live ISO is designed for installation and troubleshooting.\nBecause of this, it is <b>not capable of playing games.</b>\n\nPlease do not use it for benchmarks as it\ndoes not represent the installed experience.\n" \
+        --button="Install Cordierite":10 \
         --button="Launch Bootloader Restoring tool":20 \
         --button="Close dialog":0
     _RETVAL=$?
@@ -559,7 +559,7 @@ fi
 
 # Tweak the fedora-welcome app (gnome only) with our own text/icons
 if [[ $desktop_env == gnome ]]; then
-    sed -i 's| Fedora| Bazzite|' /usr/share/anaconda/gnome/fedora-welcome || :
+    sed -i 's| Fedora| Cordierite|' /usr/share/anaconda/gnome/fedora-welcome || :
     cp -f /usr/share/pixmaps/{fedora-logo-sprite,fedora-logo-icon}.png || :
 fi
 

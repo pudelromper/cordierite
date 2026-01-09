@@ -1,5 +1,5 @@
 [Unit]
-Description=Configure Bazzite for current user
+Description=Configure Cordierite for current user
 ConditionUser=!@system
 
 [Service]
