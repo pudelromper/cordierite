@@ -87,6 +87,7 @@ RUN --mount=type=cache,dst=/var/cache \
     done && unset -v copr && \
     dnf5 -y install --nogpgcheck --repofrompath 'terra,https://repos.fyralabs.com/terra$releasever' terra-release{,-extras,-mesa} && \
     dnf5 -y config-manager addrepo --overwrite --from-repofile=https://pkgs.tailscale.com/stable/fedora/tailscale.repo && \
+    printf '[netbird]\nname=netbird\nbaseurl=https://pkgs.netbird.io/yum/\nenabled=1\ngpgcheck=0\ngpgkey=https://pkgs.netbird.io/yum/repodata/repomd.xml.key\nrepo_gpgcheck=1\n' > /etc/yum.repos.d/netbird.repo && \
     dnf5 -y install \
         https://mirrors.rpmfusion.org/free/fedora/rpmfusion-free-release-$(rpm -E %fedora).noarch.rpm \
         https://mirrors.rpmfusion.org/nonfree/fedora/rpmfusion-nonfree-release-$(rpm -E %fedora).noarch.rpm && \
@@ -236,6 +237,7 @@ RUN --mount=type=cache,dst=/var/cache \
         pipewire-module-filter-chain-sofa \
         python3-icoextract \
         tailscale \
+        netbird-ui \
         webapp-manager \
         btop \
         duf \
@@ -511,6 +513,7 @@ RUN --mount=type=cache,dst=/var/cache \
         fedora-rar \
         google-chrome \
         tailscale \
+        netbird \
         _copr_ublue-os-akmods \
         terra \
         terra-extras \
@@ -550,6 +553,7 @@ RUN --mount=type=cache,dst=/var/cache \
     systemctl enable incus-workaround.service && \
     systemctl enable bazzite-hardware-setup.service && \
     systemctl disable tailscaled.service && \
+    systemctl enable netbird.service && \
     systemctl enable dev-hugepages1G.mount && \
     systemctl enable ds-inhibit.service && \
     systemctl --global enable bazzite-user-setup.service && \
