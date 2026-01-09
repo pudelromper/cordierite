@@ -14,7 +14,7 @@ runtime/org.freedesktop.Platform.VulkanLayer.vkBasalt/x86_64/23.08
 app/org.zotero.Zotero/x86_64/stable
 app/org.kde.konsole/x86_64/stable
 app/org.kde.ark/x86_64/stable
-app/org.kde.spectacle/x86_64/stable
+app/org.kde.spectacle.desktop/x86_64/stable
 app/org.kde.plasma-systemmonitor/x86_64/stable
 app/org.kde.kate/x86_64/stable
 app/org.kde.kdenlive/x86_64/stable
