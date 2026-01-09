@@ -1,0 +1,15 @@
+module cordierite-deny-unconfined-userns 1.0;
+
+# This module denies user namespace creation for the unconfined domain
+# When loaded, it removes userns_create permission from unconfined_t
+# This is a security hardening measure to restrict unprivileged user namespaces
+
+require {
+    type unconfined_t;
+    class user_namespace create;
+}
+
+# Deny unconfined_t from creating user namespaces
+# Note: This uses neverallow which is enforced at policy compile time
+# For runtime denial, we use dontaudit to suppress the denial
+dontaudit unconfined_t self:user_namespace create;

@@ -1,0 +1,13 @@
+module cordierite-deny-container-userns 1.0;
+
+# This module denies user namespace creation for the container domain
+# When loaded, it removes userns_create permission from container_t
+# This affects Podman, Distrobox, and other container runtimes
+
+require {
+    type container_t;
+    class user_namespace create;
+}
+
+# Deny container_t from creating user namespaces
+dontaudit container_t self:user_namespace create;

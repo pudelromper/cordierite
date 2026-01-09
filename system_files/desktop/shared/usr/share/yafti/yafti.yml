@@ -1,38 +1,18 @@
 title: Cordierite Portal
 screens:
-  - title: "Setting up Cordierite"
+  - title: "Let's get poodling"
     description: "Core system components and utilities"
     actions:
       - id: "decky-loader"
         title: "Decky Loader"
-        description: "A plugin loader for the Steam Deck"
+        description: "A plugin loader for Steam"
         default: false
         script: "ujust setup-decky install"
       - id: "decky-bazzite-buddy"
-        title: "Decky Bazzite Buddy"
-        description: "A Decky plugin that lets you see Cordierite changelogs in Game Mode."
+        title: "Decky Cordierite Buddy"
+        description: "A Decky plugin that lets you see Cordierite changelogs in Steam."
         default: false
         script: "ujust install-decky-plugins bazzite-buddy"
-      - id: "decky-framegen"
-        title: "Decky Framegen"
-        description: "A Decky plugin that sets up OptiScaler for any Steam game."
-        default: false
-        script: "ujust install-decky-plugins decky-framegen"
-      - id: "decky-lossless-scaling"
-        title: "Decky Lossless Scaling"
-        description: "A Decky plugin for lossless scaling compatibility in Linux"
-        default: false
-        script: "ujust install-decky-plugins decky-lsfg-vk"
-      - id: "emudeck"
-        title: "EmuDeck"
-        description: "A utility for installing and configuring emulators on the Steam Deck"
-        default: false
-        script: "ujust get-emudeck"
-      - id: "sunshine"
-        title: "Sunshine"
-        description: "A self-hosted game stream host for Moonlight"
-        default: false
-        script: "ujust setup-sunshine enable"
       - id: "waydroid"
         title: "Waydroid"
         description: "Android app compatibility layer for Linux"
@@ -51,16 +31,6 @@ screens:
   - title: "Media Applications"
     description: "Entertainment and streaming services"
     actions:
-      - id: "xbox-cloud-gaming"
-        title: "Xbox Cloud Gaming"
-        description: "Cloud gaming service"
-        default: false
-        script: "ujust get-media-app \"Xbox Cloud Gaming\""
-      - id: "geforce-now"
-        title: "GeForce Now"
-        description: "Cloud gaming service"
-        default: false
-        script: "ujust get-media-app \"GeForce Now\""
       - id: "youtube"
         title: "YouTube"
         description: "Video sharing platform"
@@ -86,11 +56,6 @@ screens:
         description: "Media server client"
         default: false
         script: "ujust get-media-app \"Jellyfin Media Player\""
-      - id: "amazon-luna"
-        title: "Amazon Luna"
-        description: "Cloud gaming service"
-        default: false
-        script: "ujust get-media-app \"Amazon Luna\""
       - id: "disney-plus"
         title: "Disney Plus"
         description: "Subscription streaming service"
@@ -156,7 +121,7 @@ screens:
         description: "Live TV streaming service"
         default: false
         script: "ujust get-media-app \"YouTube TV\""
-  - title: "Customizations and Tweaks"
+  - title: "Noodling and Tweaks"
     description: "System configurations and enhancements"
     actions:
       - id: "add-input-group"
@@ -206,7 +171,7 @@ screens:
         script: "ujust toggle-cec-sleep enable"
       - id: "steam-icons"
         title: "Clean Steam Shortcuts"
-        description: "Automatically removes Steam shortcuts from the desktop on boot, useful for keeping the desktop clean when installing games via game mode."
+        description: "Automatically removes Steam shortcuts from the desktop on boot, useful for keeping the desktop clean."
         default: false
         script: "ujust steam-icons enable"
       - id: "opentabletdriver"
@@ -221,16 +186,6 @@ screens:
         script: "ujust toggle-ssh enable"
       - id: "steamcmd"
         title: "SteamCMD"
-        description: "Command-line version of the Steam client for dedicated servers and game downloads"
+        description: "Command-line version of the Steam client for dedicated servers and downloads"
         default: false
         script: "ujust install-steamcmd"
-      - id: "global-fsr4"
-        title: "Global FSR4 Upgrade (RDNA4)"
-        description: "Toggle global Proton FSR4 upgrade on RDNA4 GPUs; upgrades FSR 3.1+ → FSR 4 on proton 10 or GE 10-25 or later"
-        default: false
-        script: "ujust toggle-global-fsr4 enable"
-      - id: "steamdeck-var"
-        title: "Disable Steam Deck Detection (SteamDeck=0)"
-        description: "Prevents games from detecting hardware as a Steam Deck; avoids hidden settings and forced lower textures. Useful for HTPC setups."
-        default: false
-        script: "ujust toggle-steamdeck-var enable"

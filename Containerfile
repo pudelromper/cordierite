@@ -74,7 +74,6 @@ RUN --mount=type=cache,dst=/var/cache \
         ublue-os/bazzite-multilib \
         ublue-os/staging \
         ublue-os/packages \
-        ublue-os/obs-vkcapture \
         ycollet/audinux \
         ublue-os/rom-properties \
         ublue-os/hhd \
@@ -86,7 +85,7 @@ RUN --mount=type=cache,dst=/var/cache \
         dnf5 -y config-manager setopt copr:copr.fedorainfracloud.org:${copr////:}.priority=98 ;\
     done && unset -v copr && \
     dnf5 -y install --nogpgcheck --repofrompath 'terra,https://repos.fyralabs.com/terra$releasever' terra-release{,-extras,-mesa} && \
-    dnf5 -y config-manager addrepo --overwrite --from-repofile=https://pkgs.tailscale.com/stable/fedora/tailscale.repo && \
+    printf '[netbird]\nname=netbird\nbaseurl=https://pkgs.netbird.io/yum/\nenabled=1\ngpgcheck=0\ngpgkey=https://pkgs.netbird.io/yum/repodata/repomd.xml.key\nrepo_gpgcheck=1\n' > /etc/yum.repos.d/netbird.repo && \
     dnf5 -y install \
         https://mirrors.rpmfusion.org/free/fedora/rpmfusion-free-release-$(rpm -E %fedora).noarch.rpm \
         https://mirrors.rpmfusion.org/nonfree/fedora/rpmfusion-nonfree-release-$(rpm -E %fedora).noarch.rpm && \
@@ -214,12 +213,10 @@ RUN --mount=type=cache,dst=/var/cache \
         lato-fonts \
         fira-code-fonts \
         nerd-fonts \
-        Sunshine \
         python3-pip \
         libadwaita \
         bees \
         xwininfo \
-        usbip \
         compsize \
         ryzenadj \
         ddcutil \
@@ -235,7 +232,7 @@ RUN --mount=type=cache,dst=/var/cache \
         ladspa-noise-suppression-for-voice \
         pipewire-module-filter-chain-sofa \
         python3-icoextract \
-        tailscale \
+        netbird-ui \
         webapp-manager \
         btop \
         duf \
@@ -253,17 +250,10 @@ RUN --mount=type=cache,dst=/var/cache \
         rar \
         libxcrypt-compat \
         vulkan-tools \
-        xwiimote-ng \
         fastfetch \
         glow \
         gum \
         vim \
-        cockpit-networkmanager \
-        cockpit-podman \
-        cockpit-selinux \
-        cockpit-system \
-        cockpit-files \
-        cockpit-storaged \
         topgrade \
         ydotool \
         stress-ng \
@@ -290,7 +280,6 @@ RUN --mount=type=cache,dst=/var/cache \
     /ctx/ghcurl "$(/ctx/ghcurl https://api.github.com/repos/ublue-os/extest/releases/latest | jq -r '.assets[] | select(.name| test(".*so$")).browser_download_url')" -Lo /usr/lib/extest/libextest.so && \
     chmod +x /usr/bin/framework_tool && \
     sed -i 's|uupd|& --disable-module-distrobox|' /usr/lib/systemd/system/uupd.service && \
-    setcap 'cap_sys_admin+p' $(readlink -f /usr/bin/sunshine) && \
     dnf5 -y --setopt=install_weak_deps=False install \
         rocm-hip \
         rocm-opencl \
@@ -322,12 +311,7 @@ RUN --mount=type=cache,dst=/var/cache \
         vkBasalt.x86_64 \
         vkBasalt.i686 \
         mangohud.x86_64 \
-        mangohud.i686 \
-        libobs_vkcapture.x86_64 \
-        libobs_glcapture.x86_64 \
-        libobs_vkcapture.i686 \
-        libobs_glcapture.i686 \
-        openxr && \
+        mangohud.i686 && \
     dnf5 -y --setopt=install_weak_deps=False install \
         steam \
         lutris && \
@@ -380,7 +364,7 @@ RUN --mount=type=cache,dst=/var/cache \
             kde-partitionmanager \
             plasma-discover \
             konsole && \
-        sed -i '/<entry name="launchers" type="StringList">/,/<\/entry>/ s/<default>[^<]*<\/default>/<default>preferred:\/\/browser,applications:steam.desktop,applications:net.lutris.Lutris.desktop,applications:org.gnome.Ptyxis.desktop,applications:io.github.kolunmi.Bazaar.desktop,preferred:\/\/filemanager<\/default>/' /usr/share/plasma/plasmoids/org.kde.plasma.taskmanager/contents/config/main.xml && \
+        sed -i '/<entry name="launchers" type="StringList">/,/<\/entry>/ s/<default>[^<]*<\/default>/<default>preferred:\/\/browser,applications:com.vivaldi.Vivaldi.desktop,applications:md.obsidian.Obsidian.desktop,applications:org.zotero.Zotero.desktop,applications:org.gnome.Ptyxis.desktop,applications:io.github.kolunmi.Bazaar.desktop,preferred:\/\/filemanager<\/default>/' /usr/share/plasma/plasmoids/org.kde.plasma.taskmanager/contents/config/main.xml && \
         sed -i 's@\[Desktop Action new-window\]@\[Desktop Action new-window\]\nX-KDE-Shortcuts=Ctrl+Alt+T@g' /usr/share/applications/org.gnome.Ptyxis.desktop && \
         sed -i '/^Comment/d' /usr/share/applications/org.gnome.Ptyxis.desktop && \
         sed -i 's@Exec=ptyxis@Exec=kde-ptyxis@g' /usr/share/applications/org.gnome.Ptyxis.desktop && \
@@ -389,7 +373,9 @@ RUN --mount=type=cache,dst=/var/cache \
         setcap 'cap_net_raw+ep' /usr/libexec/ksysguard/ksgrd_network_helper && \
         ln -sf /usr/share/wallpapers/convergence.jxl /usr/share/backgrounds/default.jxl && \
         ln -sf /usr/share/wallpapers/convergence.jxl /usr/share/backgrounds/default-dark.jxl && \
-        rm -f /usr/share/backgrounds/default.xml \
+        rm -f /usr/share/backgrounds/default.xml && \
+        chmod +x /usr/libexec/cordierite-security-settings && \
+        chmod +x /usr/libexec/cordierite-security-helper \
     ; else \
         declare -A toswap=( \
             ["copr:copr.fedorainfracloud.org:ublue-os:bazzite-multilib"]="gsettings-desktop-schemas mutter gnome-shell" \
@@ -464,12 +450,12 @@ RUN --mount=type=cache,dst=/var/cache \
     sed -i 's/#UserspaceHID.*/UserspaceHID=true/' /etc/bluetooth/input.conf && \
     sed -i "s|grub_probe\} --target=device /\`|grub_probe} --target=device /sysroot\`|g" /usr/bin/grub2-mkconfig && \
     rm -f /usr/lib/systemd/system/service.d/50-keep-warm.conf && \
+    echo "import \"/usr/share/ublue-os/just/79-cordierite-security.just\"" >> /usr/share/ublue-os/justfile && \
     echo "import \"/usr/share/ublue-os/just/80-bazzite.just\"" >> /usr/share/ublue-os/justfile && \
     echo "import \"/usr/share/ublue-os/just/81-bazzite-fixes.just\"" >> /usr/share/ublue-os/justfile && \
     echo "import \"/usr/share/ublue-os/just/82-bazzite-apps.just\"" >> /usr/share/ublue-os/justfile && \
     echo "import \"/usr/share/ublue-os/just/82-bazzite-beesd.just\"" >> /usr/share/ublue-os/justfile && \
     echo "import \"/usr/share/ublue-os/just/82-bazzite-cdemu.just\"" >> /usr/share/ublue-os/justfile && \
-    echo "import \"/usr/share/ublue-os/just/82-bazzite-sunshine.just\"" >> /usr/share/ublue-os/justfile && \
     echo "import \"/usr/share/ublue-os/just/82-bazzite-rmlint.just\"" >> /usr/share/ublue-os/justfile && \
     echo "import \"/usr/share/ublue-os/just/82-bazzite-waydroid.just\"" >> /usr/share/ublue-os/justfile && \
     echo "import \"/usr/share/ublue-os/just/83-bazzite-audio.just\"" >> /usr/share/ublue-os/justfile && \
@@ -509,8 +495,7 @@ RUN --mount=type=cache,dst=/var/cache \
         fedora-cisco-openh264 \
         fedora-steam \
         fedora-rar \
-        google-chrome \
-        tailscale \
+        netbird \
         _copr_ublue-os-akmods \
         terra \
         terra-extras \
@@ -522,7 +507,6 @@ RUN --mount=type=cache,dst=/var/cache \
         ublue-os/bazzite-multilib \
         ublue-os/staging \
         ublue-os/packages \
-        ublue-os/obs-vkcapture \
         ycollet/audinux \
         ublue-os/rom-properties \
         ublue-os/hhd \
@@ -549,17 +533,17 @@ RUN --mount=type=cache,dst=/var/cache \
     systemctl enable uupd.timer && \
     systemctl enable incus-workaround.service && \
     systemctl enable bazzite-hardware-setup.service && \
-    systemctl disable tailscaled.service && \
+    systemctl enable netbird.service && \
     systemctl enable dev-hugepages1G.mount && \
     systemctl enable ds-inhibit.service && \
     systemctl --global enable bazzite-user-setup.service && \
     systemctl --global enable podman.socket && \
     systemctl --global enable systemd-tmpfiles-setup.service && \
-    systemctl --global disable sunshine.service && \
     systemctl disable waydroid-container.service && \
     systemctl enable greenboot-healthcheck.service && \
     systemctl enable greenboot-set-rollback-trigger.service && \
     systemctl disable force-wol.service && \
+    systemctl disable cups.socket cups.service cups.path && \
     systemctl --global enable bazzite-dynamic-fixes.service && \
     /ctx/ghcurl "https://raw.githubusercontent.com/doitsujin/dxvk/master/dxvk.conf" -Lo /etc/dxvk-example.conf && \
     /ctx/ghcurl "https://raw.githubusercontent.com/ublue-os/waydroid-scripts/main/waydroid-choose-gpu.sh" -Lo /usr/bin/waydroid-choose-gpu && \
@@ -568,6 +552,14 @@ RUN --mount=type=cache,dst=/var/cache \
     /ctx/ghcurl "https://github.com/ublue-os/toolboxes/raw/refs/heads/main/apps/docker/distrobox.ini" -Lo /etc/distrobox/docker.ini && \
     /ctx/ghcurl "https://github.com/ublue-os/toolboxes/raw/refs/heads/main/apps/incus/distrobox.ini" -Lo /etc/distrobox/incus.ini && \
     /ctx/ghcurl "https://raw.githubusercontent.com/ublue-os/bash-preexec/master/bash-preexec.sh" -Lo /usr/share/bash-prexec && \
+    dnf5 -y install checkpolicy && \
+    for te_file in /usr/share/cordierite/selinux/*.te; do \
+        mod_name=$(basename "$te_file" .te); \
+        checkmodule -M -m -o "/usr/share/cordierite/selinux/${mod_name}.mod" "$te_file" && \
+        semodule_package -o "/usr/share/cordierite/selinux/${mod_name}.pp" -m "/usr/share/cordierite/selinux/${mod_name}.mod" && \
+        rm -f "/usr/share/cordierite/selinux/${mod_name}.mod"; \
+    done && \
+    dnf5 -y remove checkpolicy && \
     /ctx/image-info && \
     /ctx/build-initramfs && \
     /ctx/finalize
@@ -598,7 +590,6 @@ RUN --mount=type=cache,dst=/var/cache \
     dnf5 -y copr enable ublue-os/packages && \
     dnf5 -y copr enable ublue-os/bazzite && \
     dnf5 -y copr enable ublue-os/bazzite-multilib && \
-    dnf5 -y copr enable ublue-os/obs-vkcapture && \
     dnf5 -y copr enable ublue-os/hhd && \
     dnf5 -y copr enable ycollet/audinux && \
     dnf5 config-manager unsetopt skip_if_unavailable && \
@@ -715,7 +706,6 @@ RUN --mount=type=cache,dst=/var/cache \
         ublue-os/packages \
         ublue-os/bazzite \
         ublue-os/bazzite-multilib \
-        ublue-os/obs-vkcapture \
         ublue-os/hhd \
         ycollet/audinux; \
     do \

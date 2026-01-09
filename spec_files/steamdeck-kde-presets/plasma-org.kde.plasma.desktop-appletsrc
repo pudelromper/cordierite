@@ -1,0 +1,6 @@
+[Containments][1]
+plugin=org.kde.plasma.folder
+wallpaperplugin=org.kde.image
+
+[Containments][1][Wallpaper][org.kde.image][General]
+Image=/usr/share/wallpapers/dog_rest.jpg

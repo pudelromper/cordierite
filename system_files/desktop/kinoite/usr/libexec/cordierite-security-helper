@@ -1,0 +1,62 @@
+#!/usr/bin/bash
+# Cordierite Security Helper - Privileged operations
+# This script is called via pkexec and performs privileged security operations
+
+set -euo pipefail
+
+SELINUX_MODULE_USERNS="cordierite-deny-unconfined-userns"
+MODULE_PATH="/usr/share/cordierite/selinux/${SELINUX_MODULE_USERNS}"
+
+case "${1:-}" in
+    userns)
+        case "${2:-}" in
+            on|allow)
+                # Allow user namespaces by removing the deny module
+                if semodule -l 2>/dev/null | grep -q "^${SELINUX_MODULE_USERNS}"; then
+                    semodule -r "${SELINUX_MODULE_USERNS}" 2>/dev/null || true
+                fi
+                echo "User namespaces allowed"
+                ;;
+            off|deny)
+                # Deny user namespaces by installing the deny module
+                if [ -f "${MODULE_PATH}.pp" ]; then
+                    semodule -i "${MODULE_PATH}.pp"
+                elif [ -f "${MODULE_PATH}.te" ]; then
+                    TMPDIR=$(mktemp -d)
+                    checkmodule -M -m -o "${TMPDIR}/${SELINUX_MODULE_USERNS}.mod" "${MODULE_PATH}.te"
+                    semodule_package -o "${TMPDIR}/${SELINUX_MODULE_USERNS}.pp" -m "${TMPDIR}/${SELINUX_MODULE_USERNS}.mod"
+                    semodule -i "${TMPDIR}/${SELINUX_MODULE_USERNS}.pp"
+                    rm -rf "${TMPDIR}"
+                else
+                    echo "Error: SELinux policy not found" >&2
+                    exit 1
+                fi
+                echo "User namespaces denied"
+                ;;
+            *)
+                echo "Usage: $0 userns <on|off>" >&2
+                exit 1
+                ;;
+        esac
+        ;;
+    cups)
+        case "${2:-}" in
+            on|enable)
+                systemctl enable --now cups.socket cups.service 2>/dev/null || true
+                echo "CUPS enabled"
+                ;;
+            off|disable)
+                systemctl disable --now cups.socket cups.service cups.path 2>/dev/null || true
+                echo "CUPS disabled"
+                ;;
+            *)
+                echo "Usage: $0 cups <on|off>" >&2
+                exit 1
+                ;;
+        esac
+        ;;
+    *)
+        echo "Usage: $0 <userns|cups> <on|off>" >&2
+        exit 1
+        ;;
+esac

@@ -1,0 +1,7 @@
+// Allow wheel group to modify Cordierite security settings with password
+polkit.addRule(function(action, subject) {
+    if (action.id == "org.cordierite.security.helper" &&
+        subject.isInGroup("wheel")) {
+        return polkit.Result.AUTH_ADMIN_KEEP;
+    }
+});

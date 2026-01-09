@@ -1,0 +1,11 @@
+[Desktop Entry]
+Type=Application
+Name=Security Settings
+GenericName=Security Configuration
+Comment=Configure Cordierite security features
+Icon=security-high
+Categories=Settings;Security;System;
+Keywords=security;userns;namespace;cups;printing;hardening;
+Exec=/usr/libexec/cordierite-security-settings
+Terminal=false
+X-KDE-SubstituteUID=false

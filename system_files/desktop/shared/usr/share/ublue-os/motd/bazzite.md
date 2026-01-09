@@ -1,4 +1,4 @@
-# Welcome to Cordierite 󰊴
+# Woof-come to Cordierite 🐩
 󱋩 `%IMAGE_NAME%:%IMAGE_BRANCH%`
 󰟀 `%GREENBOOT%`
 
