@@ -22,27 +22,27 @@ jobs:
       fail-fast: false
       matrix:
         image_name:
-          - bazzite
-          - bazzite-nvidia
-          - bazzite-nvidia-open
+          - cordierite
+          - cordierite-nvidia
+          - cordierite-nvidia-open
           - bazzite-gnome
           - bazzite-gnome-nvidia
           - bazzite-gnome-nvidia-open
-          - bazzite-deck
+          - cordierite-deck
           - bazzite-deck-gnome
-          - bazzite-ally
+          - cordierite-ally
           - bazzite-ally-gnome
-          - bazzite-asus
+          - cordierite-asus
           - bazzite-gnome-asus
-          - bazzite-asus-nvidia
+          - cordierite-asus-nvidia
           - bazzite-gnome-asus-nvidia
-          - bazzite-asus-nvidia-open
+          - cordierite-asus-nvidia-open
           - bazzite-gnome-asus-nvidia-open
-          - bazzite-surface
+          - cordierite-surface
           - bazzite-gnome-surface
-          - bazzite-surface-nvidia-open
+          - cordierite-surface-nvidia-open
           - bazzite-gnome-surface-nvidia-open
-          - bazzite-deck-nvidia
+          - cordierite-deck-nvidia
           - bazzite-deck-nvidia-gnome
         major_version: [43]
     steps:

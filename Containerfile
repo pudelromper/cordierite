@@ -32,7 +32,7 @@ ARG FEDORA_VERSION="${FEDORA_VERSION:-43}"
 ARG ARCH="${ARCH:-x86_64}"
 
 ARG BASE_IMAGE="${BASE_IMAGE:-ghcr.io/ublue-os/${BASE_IMAGE_NAME}-main:${FEDORA_VERSION}}"
-ARG NVIDIA_BASE="${NVIDIA_BASE:-bazzite}"
+ARG NVIDIA_BASE="${NVIDIA_BASE:-cordierite}"
 ARG KERNEL_REF="${KERNEL_REF:-ghcr.io/bazzite-org/kernel-bazzite:latest-f${FEDORA_VERSION}-${ARCH}}"
 ARG NVIDIA_REF="${NVIDIA_REF:-ghcr.io/bazzite-org/nvidia-drivers:latest-f${FEDORA_VERSION}-${ARCH}}"
 
@@ -46,9 +46,9 @@ COPY build_files /
 # DESKTOP BUILDS
 ################
 
-FROM ${BASE_IMAGE} AS bazzite
+FROM ${BASE_IMAGE} AS cordierite
 
-ARG IMAGE_NAME="${IMAGE_NAME:-bazzite}"
+ARG IMAGE_NAME="${IMAGE_NAME:-cordierite}"
 ARG IMAGE_VENDOR="${IMAGE_VENDOR:-ublue-os}"
 ARG IMAGE_BRANCH="${IMAGE_BRANCH:-stable}"
 ARG BASE_IMAGE_NAME="${BASE_IMAGE_NAME:-kinoite}"
@@ -576,9 +576,9 @@ RUN bootc container lint
 # DECK BUILDS
 ################
 
-FROM bazzite AS bazzite-deck
+FROM cordierite AS cordierite-deck
 
-ARG IMAGE_NAME="${IMAGE_NAME:-bazzite-deck}"
+ARG IMAGE_NAME="${IMAGE_NAME:-cordierite-deck}"
 ARG IMAGE_VENDOR="${IMAGE_VENDOR:-ublue-os}"
 ARG IMAGE_BRANCH="${IMAGE_BRANCH:-stable}"
 ARG BASE_IMAGE_NAME="${BASE_IMAGE_NAME:-kinoite}"
@@ -759,9 +759,9 @@ RUN bootc container lint
 # NVIDIA BUILDS
 ################
 
-FROM ${NVIDIA_BASE} AS bazzite-nvidia
+FROM ${NVIDIA_BASE} AS cordierite-nvidia
 
-ARG IMAGE_NAME="${IMAGE_NAME:-bazzite-nvidia}"
+ARG IMAGE_NAME="${IMAGE_NAME:-cordierite-nvidia}"
 ARG IMAGE_VENDOR="${IMAGE_VENDOR:-ublue-os}"
 ARG IMAGE_BRANCH="${IMAGE_BRANCH:-stable}"
 ARG BASE_IMAGE_NAME="${BASE_IMAGE_NAME:-kinoite}"
