@@ -126,7 +126,6 @@ RUN --mount=type=cache,dst=/var/cache \
         libwacom-surface && \
     dnf5 -y remove \
         pipewire-config-raop && \
-    dnf5 -y config-manager setopt excludepkgs=NetworkManager-openvpn && \
     declare -A toswap=( \
         ["copr:copr.fedorainfracloud.org:ublue-os:bazzite"]="wireplumber" \
         ["copr:copr.fedorainfracloud.org:ublue-os:bazzite-multilib"]="pipewire bluez xorg-x11-server-Xwayland NetworkManager" \
@@ -196,7 +195,6 @@ RUN --mount=type=cache,dst=/var/cache \
     --mount=type=bind,from=ctx,source=/,target=/ctx \
     --mount=type=tmpfs,dst=/tmp \
     --mount=type=secret,id=GITHUB_TOKEN \
-    rm -f /usr/lib/sysusers.d/nm-openvpn-sysusers.conf && \
     dnf5 -y install \
         $(/ctx/ghcurl https://api.github.com/repos/ublue-os/cicpoffs/releases/latest | jq -r '.assets[] | select(.name| test(".*rpm$")).browser_download_url') && \
     dnf5 -y copr enable bieszczaders/kernel-cachyos-addons && \
@@ -204,7 +202,7 @@ RUN --mount=type=cache,dst=/var/cache \
         scx-scheds \
         scx-tools && \
     dnf5 -y copr disable bieszczaders/kernel-cachyos-addons && \
-    dnf5 -y install --exclude=NetworkManager-openvpn \
+    dnf5 -y install \
         bazaar \
         iwd \
         greenboot \
@@ -289,7 +287,7 @@ RUN --mount=type=cache,dst=/var/cache \
     mkdir -p /etc/xdg/autostart && \
     sed -i~ -E 's/=.\$\(command -v (nft|ip6?tables-legacy).*/=/g' /usr/lib/waydroid/data/scripts/waydroid-net.sh && \
     sed -i 's/ --xdg-runtime=\\"${XDG_RUNTIME_DIR}\\"//g' /usr/bin/btrfs-assistant-launcher && \
-    dnf5 -y install netbird-ui && \
+    dnf5 -y install netbird netbird-ui && \
     /ctx/cleanup
 
 # Install Steam & Lutris, plus supporting packages
