@@ -234,7 +234,6 @@ RUN --mount=type=cache,dst=/var/cache \
         ladspa-noise-suppression-for-voice \
         pipewire-module-filter-chain-sofa \
         python3-icoextract \
-        netbird-ui \
         webapp-manager \
         btop \
         duf \
@@ -290,6 +289,7 @@ RUN --mount=type=cache,dst=/var/cache \
     mkdir -p /etc/xdg/autostart && \
     sed -i~ -E 's/=.\$\(command -v (nft|ip6?tables-legacy).*/=/g' /usr/lib/waydroid/data/scripts/waydroid-net.sh && \
     sed -i 's/ --xdg-runtime=\\"${XDG_RUNTIME_DIR}\\"//g' /usr/bin/btrfs-assistant-launcher && \
+    dnf5 -y install netbird-ui && \
     /ctx/cleanup
 
 # Install Steam & Lutris, plus supporting packages
