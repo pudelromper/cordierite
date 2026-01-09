@@ -202,7 +202,7 @@ RUN --mount=type=cache,dst=/var/cache \
         scx-scheds \
         scx-tools && \
     dnf5 -y copr disable bieszczaders/kernel-cachyos-addons && \
-    dnf5 -y install \
+    dnf5 -y install --exclude=NetworkManager-openvpn \
         bazaar \
         iwd \
         greenboot \
