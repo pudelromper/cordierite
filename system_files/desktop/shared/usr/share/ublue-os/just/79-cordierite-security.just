@@ -276,6 +276,4 @@ security-status:
 
 # Display current user namespace security status (alias for backwards compatibility)
 [group("security")]
-userns-status:
-    #!/usr/bin/bash
-    ujust security-status
+userns-status: security-status
