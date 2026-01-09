@@ -305,6 +305,15 @@ else
   echo "No Flatpak runtime changes needed"
 fi
 
+sed -i 's/^UMASK.*/UMASK\t\t027/' /etc/login.defs
+sed -i 's/^#*YESCRYPT_COST_FACTOR.*/YESCRYPT_COST_FACTOR 8/' /etc/login.defs
+
+authselect enable-feature with-faillock
+
+for repo in /etc/yum.repos.d/*.repo; do
+    sed -i 's/metalink?/metalink?protocol=https\&/g' "$repo"
+done
+
 if [[ -n "$NEEDED_KARGS" ]]; then
   echo "Found needed karg changes, applying the following: ${NEEDED_KARGS[*]}"
   plymouth display-message --text="Preparing System - Please wait, this may take a while" || true
