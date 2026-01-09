@@ -1,6 +1,6 @@
-title: Bazzite Portal
+title: Cordierite Portal
 screens:
-  - title: "Setting up Bazzite"
+  - title: "Setting up Cordierite"
     description: "Core system components and utilities"
     actions:
       - id: "decky-loader"
@@ -10,7 +10,7 @@ screens:
         script: "ujust setup-decky install"
       - id: "decky-bazzite-buddy"
         title: "Decky Bazzite Buddy"
-        description: "A Decky plugin that lets you see Bazzite changelogs in Game Mode."
+        description: "A Decky plugin that lets you see Cordierite changelogs in Game Mode."
         default: false
         script: "ujust install-decky-plugins bazzite-buddy"
       - id: "decky-framegen"

@@ -3,7 +3,7 @@
  "-//freedesktop//DTD PolicyKit Policy Configuration 1.0//EN"
  "http://www.freedesktop.org/standards/PolicyKit/1/policyconfig.dtd">
 <policyconfig>
-  <vendor>Bazzite</vendor>
+  <vendor>Cordierite</vendor>
   <vendor_url>https://bazzite.gg</vendor_url>
 
   <action id="org.bazzite.policykit.waydroid.container.start">

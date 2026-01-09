@@ -1,5 +1,5 @@
 [Unit]
-Description=Enables Bazzite autologin
+Description=Enables Cordierite autologin
 Before=display-manager.service
 
 [Service]
