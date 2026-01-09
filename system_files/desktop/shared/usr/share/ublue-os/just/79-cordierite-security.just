@@ -1,5 +1,4 @@
 # vim: set ft=make :
-
 # Cordierite Security Hardening Commands
 # These commands help manage security features like user namespace restrictions
 
