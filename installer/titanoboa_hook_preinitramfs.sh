@@ -22,7 +22,7 @@ dnf -y --repo fedora,updates --setopt=tsflags=noscripts install kernel kernel-co
 kernel=$(find /usr/lib/modules -maxdepth 1 -type d -printf '%P\n' | grep .)
 depmod "$kernel"
 
-imageref="$(podman images --format '{{ index .Names 0 }}\n' 'bazzite*' | head -1)"
+imageref="$(podman images --format '{{ index .Names 0 }}\n' '*cordierite*' 'bazzite*' 2>/dev/null | head -1)"
 imageref="${imageref##*://}"
 imageref="${imageref%%:*}"
 
