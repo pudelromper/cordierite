@@ -16,7 +16,7 @@ mkdir -p /var/lib/rpm-state # Needed for Anaconda Web UI
 dnf install -qy --setopt=install_weak_deps=0 qrencode yad
 
 # Variables
-imageref="$(podman images --format '{{ index .Names 0 }}\n' '*cordierite*' 'bazzite*' 2>/dev/null | head -1)"
+imageref="$(podman images --format '{{ index .Names 0 }}' | grep -E '(cordierite|bazzite)' | head -1)"
 imageref="${imageref##*://}"
 imageref="${imageref%%:*}"
 imagetag="$(podman images --format '{{ .Tag }}\n' "$imageref" | head -1)"
