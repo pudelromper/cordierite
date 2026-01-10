@@ -4,6 +4,7 @@ on:
     - cron: "40 4 * * 1" # 4:40 utc monday
   pull_request:
     branches:
+      - main
       - testing
       - unstable
     paths-ignore:
@@ -18,6 +19,7 @@ on:
       - ".github/workflows/build_iso*.yml"
   push:
     branches:
+      - main
       - testing
       - unstable
     paths-ignore:
