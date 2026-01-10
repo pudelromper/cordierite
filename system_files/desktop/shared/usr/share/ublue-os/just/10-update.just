@@ -1,16 +1,39 @@
 # vim: set ft=make :
 
 alias upgrade := update
+alias fetch := update
 
-# Update system, flatpaks, and containers all at once
+# 🐩 Fetch updates for system, flatpaks, and containers
 [group("system")]
 update:
     #!/usr/bin/bash
+    echo "🐩 Fetching updates... Good boy!"
+    echo ""
 
     # Source brew if we are not in an interactive session
     [[ $- != *i* ]] && source <(/home/linuxbrew/.linuxbrew/bin/brew shellenv)
 
     /usr/bin/topgrade --config /usr/share/ublue-os/topgrade.toml --keep
+
+    echo ""
+    echo "🐩 All done! Woof!"
+
+# 🐩 Groom your system - clean up unused packages and cache
+[group("system")]
+groom:
+    #!/usr/bin/bash
+    echo "🐩 Time for grooming! Cleaning up your system..."
+    echo ""
+    echo "Trimming flatpak unused runtimes..."
+    flatpak uninstall --unused -y 2>/dev/null || true
+    echo ""
+    echo "Cleaning package cache..."
+    sudo dnf5 clean all 2>/dev/null || true
+    echo ""
+    echo "Cleaning journal logs older than 7 days..."
+    sudo journalctl --vacuum-time=7d 2>/dev/null || true
+    echo ""
+    echo "🐩 Looking paw-fect! Your system is all groomed."
 
 # Turn automatic updates on or off
 _toggle-updates ACTION="prompt":
