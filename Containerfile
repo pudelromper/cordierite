@@ -501,7 +501,9 @@ RUN --mount=type=cache,dst=/var/cache \
     systemctl disable rpm-ostreed-automatic.timer && \
     systemctl enable uupd.timer && \
     systemctl enable incus-workaround.service && \
+    chmod +x /usr/libexec/bazzite-rebase-boot-setup && \
     systemctl enable bazzite-hardware-setup.service && \
+    systemctl enable bazzite-rebase-boot-setup.service && \
     systemctl enable netbird.service && \
     systemctl enable dev-hugepages1G.mount && \
     systemctl enable ds-inhibit.service && \
