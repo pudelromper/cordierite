@@ -2,7 +2,7 @@
 󱋩 `%IMAGE_NAME%:%IMAGE_BRANCH%`
 󰟀 `%GREENBOOT%`
 
-|  Command | Description |
+|  Command | Description |
 | ------- | ----------- |
 | `ujust --choose`  | List all available commands |
 | `ujust toggle-user-motd` | Toggle this banner on/off |
@@ -10,7 +10,6 @@
 | `brew help` | Manage command line packages |
 
 %TIP%
-- **** [Report an issue](http://issues.bazzite.gg/)
-- **󰈙** [Documentation](http://docs.bazzite.gg/)
-- **󰙯** [Discord](https://discord.bazzite.gg/)
-- **** [Bluesky](https://bluesky.bazzite.gg/)
+- **** [Report an issue](https://github.com/pudelromper/cordierite/issues/)
+- **󰈙** [Bazzite Docs](http://docs.bazzite.gg/)
+- **󰙯** [Discussions](https://github.com/pudelromper/cordierite/discussions)
