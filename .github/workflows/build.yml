@@ -7,8 +7,6 @@ on:
       - main
       - testing
       - unstable
-    branches-ignore:
-      - 'claude/**'
     paths-ignore:
       - "**.md"
       - "**.txt"
@@ -24,8 +22,6 @@ on:
       - main
       - testing
       - unstable
-    branches-ignore:
-      - 'claude/**'
     paths-ignore:
       - "**.md"
       - "**.txt"
