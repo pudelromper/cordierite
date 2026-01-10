@@ -6,7 +6,7 @@ from typing import Any
 import re
 from collections import defaultdict
 
-REGISTRY = "docker://ghcr.io/ublue-os/"
+REGISTRY = "docker://ghcr.io/pudelromper/"
 
 IMAGES = [
     "cordierite",
@@ -44,7 +44,7 @@ OTHER_NAMES = {
 COMMITS_FORMAT = (
     "### Commits\n| Hash | Subject | Author |\n| --- | --- | --- |{commits}\n\n"
 )
-COMMIT_FORMAT = "\n| **[{short}](https://github.com/ublue-os/bazzite/commit/{hash})** | {subject} | {author} |"
+COMMIT_FORMAT = "\n| **[{short}](https://github.com/pudelromper/cordierite/commit/{hash})** | {subject} | {author} |"
 
 CHANGELOG_TITLE = "{tag}: {pretty}"
 CHANGELOG_FORMAT = """\
