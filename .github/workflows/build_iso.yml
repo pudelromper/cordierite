@@ -25,27 +25,9 @@ jobs:
       matrix:
         image_name:
           - cordierite
+          - cordierite-deck
           - cordierite-nvidia
           - cordierite-nvidia-open
-          - bazzite-gnome
-          - bazzite-gnome-nvidia
-          - bazzite-gnome-nvidia-open
-          - cordierite-deck
-          - bazzite-deck-gnome
-          - cordierite-ally
-          - bazzite-ally-gnome
-          - cordierite-asus
-          - bazzite-gnome-asus
-          - cordierite-asus-nvidia
-          - bazzite-gnome-asus-nvidia
-          - cordierite-asus-nvidia-open
-          - bazzite-gnome-asus-nvidia-open
-          - cordierite-surface
-          - bazzite-gnome-surface
-          - cordierite-surface-nvidia-open
-          - bazzite-gnome-surface-nvidia-open
-          - cordierite-deck-nvidia
-          - bazzite-deck-nvidia-gnome
         major_version: [43]
     steps:
 

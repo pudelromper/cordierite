@@ -7,6 +7,8 @@ on:
       - main
       - testing
       - unstable
+    branches-ignore:
+      - 'claude/**'
     paths-ignore:
       - "**.md"
       - "**.txt"
@@ -22,6 +24,8 @@ on:
       - main
       - testing
       - unstable
+    branches-ignore:
+      - 'claude/**'
     paths-ignore:
       - "**.md"
       - "**.txt"
@@ -61,15 +65,9 @@ jobs:
       matrix:
         image:
           - cordierite
-          - bazzite-gnome
           - cordierite-deck
-          - bazzite-deck-gnome
-          - cordierite-deck-nvidia
-          - bazzite-deck-nvidia-gnome
           - cordierite-nvidia
-          - bazzite-gnome-nvidia
           - cordierite-nvidia-open
-          - bazzite-gnome-nvidia-open
         include:
           - fedora_version: 43
             kernel_version: ${{ (github.ref_name == 'testing' || github.ref_name == 'unstable') && 'latest' || 'latest' }}
@@ -368,16 +366,3 @@ jobs:
     if: github.event_name != 'pull_request'
     secrets: inherit
     uses: ./.github/workflows/generate_release.yml
-
-  kickoff_bazzite_dx:
-    runs-on: ubuntu-24.04
-    needs: [generate_release]
-    if: github.event_name != 'pull_request' && github.ref == format('refs/heads/{0}', github.event.repository.default_branch)
-    steps:
-      - name: Kickoff Bazzite-DX
-        uses: peter-evans/repository-dispatch@28959ce8df70de7be546dd1250a005dd32156697 # v4
-        continue-on-error: true
-        with:
-          token: ${{ secrets.PAT }}
-          repository: ublue-os/bazzite-dx
-          event-type: build
