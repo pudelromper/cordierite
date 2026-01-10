@@ -1,0 +1,15 @@
+[Unit]
+Description=Fix EFI boot configuration after rebasing to Cordierite
+# Run early, before hardware setup
+After=local-fs.target
+Before=bazzite-hardware-setup.service systemd-user-sessions.service
+# Only run if we have the boot partition mounted
+ConditionPathIsMountPoint=/boot
+
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+ExecStart=/usr/libexec/bazzite-rebase-boot-setup
+
+[Install]
+WantedBy=multi-user.target

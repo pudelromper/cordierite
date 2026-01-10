@@ -1,0 +1,166 @@
+#!/usr/bin/bash
+#
+# bazzite-rebase-boot-setup - Fix EFI boot issues after rebasing
+#
+# This script handles boot configuration that is normally done during
+# ISO installation but is skipped when rebasing to Cordierite/Bazzite.
+# It ensures:
+#   1. Universal Blue MOK key is enrolled for Secure Boot
+#   2. GRUB configuration is regenerated for ostree
+#
+set -euo pipefail
+
+SCRIPT_NAME="bazzite-rebase-boot-setup"
+FIXUP_DIR="/etc/bazzite/fixups"
+FIXUP_FILE="$FIXUP_DIR/rebase-boot-setup"
+SECUREBOOT_KEY="/usr/share/ublue-os/sb_pubkey.der"
+ENROLLMENT_PASSWORD="universalblue"
+
+log() {
+    echo "[$SCRIPT_NAME] $*"
+}
+
+error() {
+    echo "[$SCRIPT_NAME] ERROR: $*" >&2
+}
+
+# Check if we've already run this setup
+if [[ -f "$FIXUP_FILE" ]]; then
+    log "Boot setup already completed, skipping"
+    exit 0
+fi
+
+mkdir -p "$FIXUP_DIR"
+
+# Detect hardware
+SYS_ID="$(cat /sys/devices/virtual/dmi/id/product_name 2>/dev/null || echo "Unknown")"
+
+#
+# SECURE BOOT / MOK KEY ENROLLMENT
+#
+setup_secureboot() {
+    # Skip if not in EFI mode
+    if [[ ! -d "/sys/firmware/efi" ]]; then
+        log "Not in EFI mode, skipping Secure Boot setup"
+        return 0
+    fi
+
+    # Skip if no key file
+    if [[ ! -f "$SECUREBOOT_KEY" ]]; then
+        log "Secure Boot key not found at $SECUREBOOT_KEY, skipping"
+        return 0
+    fi
+
+    # Skip on Steam Deck (no Secure Boot)
+    if [[ ":Jupiter:Galileo:" =~ ":$SYS_ID:" ]]; then
+        log "Steam Deck detected, skipping Secure Boot setup"
+        return 0
+    fi
+
+    # Check if key is already enrolled or pending
+    if mokutil -t "$SECUREBOOT_KEY" 2>/dev/null | grep -q "is already enrolled"; then
+        log "Secure Boot key already enrolled"
+        return 0
+    fi
+
+    if mokutil -t "$SECUREBOOT_KEY" 2>/dev/null | grep -q "is already in the enrollment request"; then
+        log "Secure Boot key already pending enrollment"
+        return 0
+    fi
+
+    # Check if Secure Boot is enabled
+    if ! mokutil --sb-state 2>/dev/null | grep -q "SecureBoot enabled"; then
+        log "Secure Boot is disabled, skipping key enrollment"
+        return 0
+    fi
+
+    log "Enrolling Universal Blue Secure Boot key..."
+    log "You will need to confirm enrollment on next reboot (password: universalblue)"
+
+    # Set timeout for MOK enrollment
+    mokutil --timeout -1 2>/dev/null || true
+
+    # Enroll the key
+    if echo -e "$ENROLLMENT_PASSWORD\n$ENROLLMENT_PASSWORD" | mokutil --import "$SECUREBOOT_KEY" 2>/dev/null; then
+        log "Secure Boot key queued for enrollment"
+        log "IMPORTANT: On next reboot, confirm MOK enrollment with password: universalblue"
+    else
+        error "Failed to queue Secure Boot key for enrollment"
+    fi
+}
+
+#
+# GRUB CONFIGURATION REGENERATION
+#
+setup_grub() {
+    # Skip if not in EFI mode and no BIOS grub
+    if [[ ! -d "/sys/firmware/efi" ]] && [[ ! -f "/etc/grub2.cfg" ]]; then
+        log "No GRUB configuration found, skipping"
+        return 0
+    fi
+
+    # Source the boot remount helper
+    if [[ -f "/usr/libexec/bazzite-boot-remount" ]]; then
+        source /usr/libexec/bazzite-boot-remount
+    else
+        # Fallback implementation
+        remount_boot_rw() {
+            if grep -q " /boot .* ro," /proc/mounts 2>/dev/null; then
+                mount -o remount,rw /boot || return 1
+            fi
+        }
+        remount_boot_ro() {
+            if grep -q " /boot .* rw," /proc/mounts 2>/dev/null; then
+                mount -o remount,ro /boot || return 1
+            fi
+        }
+    fi
+
+    log "Regenerating GRUB configuration for ostree deployment..."
+
+    remount_boot_rw || {
+        error "Failed to remount /boot as read-write"
+        return 1
+    }
+
+    local grub_cfg
+    if [[ -d "/sys/firmware/efi" ]]; then
+        grub_cfg="/etc/grub2-efi.cfg"
+    else
+        grub_cfg="/etc/grub2.cfg"
+    fi
+
+    if grub2-mkconfig -o "$grub_cfg" 2>/dev/null; then
+        log "GRUB configuration regenerated successfully"
+    else
+        error "Failed to regenerate GRUB configuration"
+        remount_boot_ro || true
+        return 1
+    fi
+
+    remount_boot_ro || true
+    return 0
+}
+
+#
+# MAIN
+#
+log "Starting post-rebase boot setup..."
+
+# Run setup functions
+setup_secureboot || true
+setup_grub || true
+
+# Mark as completed
+touch "$FIXUP_FILE"
+log "Boot setup completed"
+
+# Check if reboot is needed for MOK enrollment
+if mokutil -t "$SECUREBOOT_KEY" 2>/dev/null | grep -q "is already in the enrollment request"; then
+    log ""
+    log "=========================================="
+    log "REBOOT REQUIRED for Secure Boot key enrollment"
+    log "On reboot, you'll see a blue MOK Manager screen"
+    log "Select 'Enroll MOK' and enter password: universalblue"
+    log "=========================================="
+fi

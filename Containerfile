@@ -333,7 +333,7 @@ RUN --mount=type=cache,dst=/var/cache \
             krunner-bazaar \
             falkon \
             ptyxis && \
-        sed -i '/<entry name="launchers" type="StringList">/,/<\/entry>/ s/<default>[^<]*<\/default>/<default>preferred:\/\/browser,applications:com.vivaldi.Vivaldi.desktop,applications:md.obsidian.Obsidian.desktop,applications:org.zotero.Zotero.desktop,applications:org.gnome.Ptyxis.desktop,applications:io.github.kolunmi.Bazaar.desktop,preferred:\/\/filemanager<\/default>/' /usr/share/plasma/plasmoids/org.kde.plasma.taskmanager/contents/config/main.xml && \
+        sed -i '/<entry name="launchers" type="StringList">/,/<\/entry>/ s/<default>[^<]*<\/default>/<default>preferred:\/\/browser,applications:com.vivaldi.Vivaldi.desktop,applications:md.obsidian.Obsidian.desktop,applications:org.zotero.Zotero.desktop,applications:org.zulip.Zulip.desktop,applications:org.gnome.Ptyxis.desktop,applications:io.github.kolunmi.Bazaar.desktop,preferred:\/\/filemanager<\/default>/' /usr/share/plasma/plasmoids/org.kde.plasma.taskmanager/contents/config/main.xml && \
         sed -i 's@\[Desktop Action new-window\]@\[Desktop Action new-window\]\nX-KDE-Shortcuts=Ctrl+Alt+T@g' /usr/share/applications/org.gnome.Ptyxis.desktop && \
         sed -i '/^Comment/d' /usr/share/applications/org.gnome.Ptyxis.desktop && \
         sed -i 's@Exec=ptyxis@Exec=kde-ptyxis@g' /usr/share/applications/org.gnome.Ptyxis.desktop && \
@@ -344,7 +344,8 @@ RUN --mount=type=cache,dst=/var/cache \
         ln -sf /usr/share/wallpapers/convergence.jxl /usr/share/backgrounds/default-dark.jxl && \
         rm -f /usr/share/backgrounds/default.xml && \
         chmod +x /usr/libexec/cordierite-security-settings && \
-        chmod +x /usr/libexec/cordierite-security-helper \
+        chmod +x /usr/libexec/cordierite-security-helper && \
+        chmod +x /usr/bin/cordierite-install-flatpaks \
     ; else \
         declare -A toswap=( \
             ["copr:copr.fedorainfracloud.org:ublue-os:bazzite-multilib"]="gsettings-desktop-schemas mutter gnome-shell" \
@@ -501,7 +502,9 @@ RUN --mount=type=cache,dst=/var/cache \
     systemctl disable rpm-ostreed-automatic.timer && \
     systemctl enable uupd.timer && \
     systemctl enable incus-workaround.service && \
+    chmod +x /usr/libexec/bazzite-rebase-boot-setup && \
     systemctl enable bazzite-hardware-setup.service && \
+    systemctl enable bazzite-rebase-boot-setup.service && \
     systemctl enable netbird.service && \
     systemctl enable dev-hugepages1G.mount && \
     systemctl enable ds-inhibit.service && \
