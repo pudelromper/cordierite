@@ -1,7 +1,7 @@
 #!/usr/bin/bash
 
 # SCRIPT VERSION
-VER=29
+VER=30
 VER_FILE="/etc/bazzite/flatpak_manager_version"
 VER_RAN=$(cat $VER_FILE)
 IMAGE_INFO="/usr/share/ublue-os/image-info.json"
@@ -43,6 +43,40 @@ if [[ ! -f "$PROTONTRICKS_SETUP_FILE" ]]; then
   else
     touch "$PROTONTRICKS_SETUP_FILE"
   fi
+fi
+
+# Install default Flatpaks on first boot (for rebase installs)
+# ISO installs have flatpaks pre-installed, rebase installs do not
+DEFAULT_FLATPAKS_INSTALLED="/etc/bazzite/default_flatpaks_installed"
+DEFAULT_FLATPAKS_LIST="/usr/share/cordierite/default-flatpaks"
+
+if [[ ! -f "$DEFAULT_FLATPAKS_INSTALLED" ]] && [[ -f "$DEFAULT_FLATPAKS_LIST" ]]; then
+  echo "Installing default Flatpaks (first boot after rebase)..."
+
+  # Get list of already installed flatpaks
+  INSTALLED_FLATPAKS=$(/usr/bin/flatpak list --app --columns=application 2>/dev/null || echo "")
+
+  # Read the default flatpaks list and install missing ones
+  while IFS= read -r line || [[ -n "$line" ]]; do
+    # Skip empty lines and comments
+    [[ -z "$line" || "$line" =~ ^# ]] && continue
+
+    # Extract app ID from the full ref (e.g., "app/org.kde.gwenview/x86_64/stable" -> "org.kde.gwenview")
+    APP_ID=$(echo "$line" | cut -d'/' -f2)
+
+    # Skip if already installed
+    if grep -q "$APP_ID" <<< "$INSTALLED_FLATPAKS"; then
+      echo "Skipping $APP_ID (already installed)"
+      continue
+    fi
+
+    # Install the flatpak
+    echo "Installing $APP_ID..."
+    flatpak install --system --assumeyes --noninteractive "$line" || echo "Warning: Failed to install $APP_ID"
+  done < "$DEFAULT_FLATPAKS_LIST"
+
+  touch "$DEFAULT_FLATPAKS_INSTALLED"
+  echo "Default Flatpaks installation complete."
 fi
 
 # Flatpak theming support
