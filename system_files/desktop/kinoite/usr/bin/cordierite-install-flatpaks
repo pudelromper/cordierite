@@ -1,0 +1,66 @@
+#!/usr/bin/bash
+#
+# Install default Cordierite Flatpaks
+# Run this if you rebased to Cordierite and don't have the default apps
+#
+
+set -euo pipefail
+
+DEFAULT_FLATPAKS_LIST="/usr/share/cordierite/default-flatpaks"
+
+if [[ ! -f "$DEFAULT_FLATPAKS_LIST" ]]; then
+  echo "Error: Flatpak list not found at $DEFAULT_FLATPAKS_LIST"
+  echo "Are you running a Cordierite KDE image?"
+  exit 1
+fi
+
+echo "=== Cordierite Default Flatpaks Installer ==="
+echo ""
+
+# Ensure Flathub is set up
+echo "Setting up Flathub remote..."
+flatpak remote-add --if-not-exists --system flathub https://dl.flathub.org/repo/flathub.flatpakrepo
+flatpak remote-modify --system --enable flathub
+
+# Get list of already installed flatpaks
+INSTALLED_FLATPAKS=$(flatpak list --app --columns=application 2>/dev/null || echo "")
+
+# Count totals
+TOTAL=$(grep -c '^app/' "$DEFAULT_FLATPAKS_LIST" || echo "0")
+INSTALLED=0
+SKIPPED=0
+
+echo "Installing $TOTAL default Flatpaks..."
+echo ""
+
+# Read the default flatpaks list and install missing ones
+while IFS= read -r line || [[ -n "$line" ]]; do
+  # Skip empty lines and comments
+  [[ -z "$line" || "$line" =~ ^# ]] && continue
+  [[ ! "$line" =~ ^app/ ]] && continue
+
+  # Extract app ID from the full ref
+  APP_ID=$(echo "$line" | cut -d'/' -f2)
+
+  # Skip if already installed
+  if grep -q "$APP_ID" <<< "$INSTALLED_FLATPAKS"; then
+    echo "✓ $APP_ID (already installed)"
+    ((SKIPPED++)) || true
+    continue
+  fi
+
+  # Install the flatpak
+  echo "→ Installing $APP_ID..."
+  if flatpak install --system --assumeyes --noninteractive "$line" 2>/dev/null; then
+    ((INSTALLED++)) || true
+  else
+    echo "  ⚠ Failed to install $APP_ID"
+  fi
+done < "$DEFAULT_FLATPAKS_LIST"
+
+echo ""
+echo "=== Complete ==="
+echo "Installed: $INSTALLED"
+echo "Already had: $SKIPPED"
+echo ""
+echo "You may need to log out and back in for all apps to appear in menus."

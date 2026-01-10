@@ -344,7 +344,8 @@ RUN --mount=type=cache,dst=/var/cache \
         ln -sf /usr/share/wallpapers/convergence.jxl /usr/share/backgrounds/default-dark.jxl && \
         rm -f /usr/share/backgrounds/default.xml && \
         chmod +x /usr/libexec/cordierite-security-settings && \
-        chmod +x /usr/libexec/cordierite-security-helper \
+        chmod +x /usr/libexec/cordierite-security-helper && \
+        chmod +x /usr/bin/cordierite-install-flatpaks \
     ; else \
         declare -A toswap=( \
             ["copr:copr.fedorainfracloud.org:ublue-os:bazzite-multilib"]="gsettings-desktop-schemas mutter gnome-shell" \
