@@ -11,7 +11,7 @@ URL:            https://github.com/ublue-os/bazzite
 
 Source0:        https://gitlab.com/evlaV/%{packagename}/-/archive/%{packagever}/%{packagename}-%{packagever}.tar.gz
 Source1:        steamdeck-le.svg
-Source2:        bazzite_logo.svgz
+Source2:        cordierite_logo.svgz
 Source3:        metadata_vapor.json
 Source4:        metadata_vgui2.json
 Source5:        plasmarc
@@ -19,7 +19,7 @@ BuildArch:      noarch
 Patch0:         fedora.patch
 Patch1:         nested-desktop-resolution.patch
 Patch2:         kdeglobals.patch
-Patch3:         bazzite_logo.patch
+Patch3:         cordierite_logo.patch
 Patch4:         ublue.patch
 Patch5:         wayland-remove-env.patch
 Patch6:         splash.patch
@@ -65,8 +65,8 @@ rm %{buildroot}%{_datadir}/plasma/look-and-feel/com.valve.vapor.desktop/contents
 rm %{buildroot}%{_datadir}/plasma/look-and-feel/com.valve.vgui.desktop/contents/splash/images/deck_logo.svgz
 rm %{buildroot}%{_sysconfdir}/xdg/autostart/jupiter-plasma-bootstrap.desktop
 rm %{buildroot}%{_bindir}/jupiter-plasma-bootstrap
-cp %{SOURCE2} %{buildroot}%{_datadir}/plasma/look-and-feel/com.valve.vapor.desktop/contents/splash/images/bazzite_logo.svgz
-cp %{SOURCE2} %{buildroot}%{_datadir}/plasma/look-and-feel/com.valve.vgui.desktop/contents/splash/images/bazzite_logo.svgz
+cp %{SOURCE2} %{buildroot}%{_datadir}/plasma/look-and-feel/com.valve.vapor.desktop/contents/splash/images/cordierite_logo.svgz
+cp %{SOURCE2} %{buildroot}%{_datadir}/plasma/look-and-feel/com.valve.vgui.desktop/contents/splash/images/cordierite_logo.svgz
 cp %{SOURCE3} %{buildroot}%{_datadir}/plasma/look-and-feel/com.valve.vapor.desktop/metadata.json
 cp %{SOURCE4} %{buildroot}%{_datadir}/plasma/look-and-feel/com.valve.vgui.desktop/metadata.json
 mkdir -p %{buildroot}%{_datadir}/kio/servicemenus

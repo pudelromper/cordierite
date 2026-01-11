@@ -12,15 +12,18 @@ URL:            https://github.com/ublue-os/bazzite
 Source0:        https://gitlab.com/evlaV/%{packagename}/-/archive/%{packagever}/%{packagename}-%{packagever}.tar.gz
 Source1:        kdeglobals-desktop
 Source2:        steamdeck-le.svg
-Source3:        bazzite_logo.svgz
+Source3:        cordierite_logo.svgz
 Source4:        metadata_vapor.json
 Source5:        metadata_vgui2.json
 Source6:        plasmarc
 Source7:        plasma-org.kde.plasma.desktop-appletsrc
 Source8:        Cordierite.colors
+Source9:        look-and-feel/com.cordierite.desktop/metadata.json
+Source10:       look-and-feel/com.cordierite.desktop/contents/defaults
+Source11:       look-and-feel/com.cordierite.desktop/contents/splash/Splash.qml
 Patch0:         multiuser.patch
 Patch1:         lockscreen.patch
-Patch2:         bazzite_logo.patch
+Patch2:         cordierite_logo.patch
 Patch3:         ublue.patch
 Patch4:         splash.patch
 
@@ -80,11 +83,18 @@ cp %{SOURCE1} %{buildroot}%{_sysconfdir}/xdg/kdeglobals
 cp %{SOURCE7} %{buildroot}%{_sysconfdir}/xdg/plasma-org.kde.plasma.desktop-appletsrc
 rm %{buildroot}%{_datadir}/plasma/look-and-feel/com.valve.vapor.desktop/contents/splash/images/deck_logo.svgz
 rm %{buildroot}%{_datadir}/plasma/look-and-feel/com.valve.vgui.desktop/contents/splash/images/deck_logo.svgz
-cp %{SOURCE3} %{buildroot}%{_datadir}/plasma/look-and-feel/com.valve.vapor.desktop/contents/splash/images/bazzite_logo.svgz
-cp %{SOURCE3} %{buildroot}%{_datadir}/plasma/look-and-feel/com.valve.vgui.desktop/contents/splash/images/bazzite_logo.svgz
+cp %{SOURCE3} %{buildroot}%{_datadir}/plasma/look-and-feel/com.valve.vapor.desktop/contents/splash/images/cordierite_logo.svgz
+cp %{SOURCE3} %{buildroot}%{_datadir}/plasma/look-and-feel/com.valve.vgui.desktop/contents/splash/images/cordierite_logo.svgz
 cp %{SOURCE4} %{buildroot}%{_datadir}/plasma/look-and-feel/com.valve.vapor.desktop/metadata.json
 cp %{SOURCE5} %{buildroot}%{_datadir}/plasma/look-and-feel/com.valve.vgui.desktop/metadata.json
 cp %{SOURCE8} %{buildroot}%{_datadir}/color-schemes/Cordierite.colors
+# Install Cordierite look-and-feel theme
+mkdir -p %{buildroot}%{_datadir}/plasma/look-and-feel/com.cordierite.desktop/contents/splash/images
+cp %{SOURCE9} %{buildroot}%{_datadir}/plasma/look-and-feel/com.cordierite.desktop/metadata.json
+cp %{SOURCE10} %{buildroot}%{_datadir}/plasma/look-and-feel/com.cordierite.desktop/contents/defaults
+cp %{SOURCE11} %{buildroot}%{_datadir}/plasma/look-and-feel/com.cordierite.desktop/contents/splash/Splash.qml
+cp %{SOURCE3} %{buildroot}%{_datadir}/plasma/look-and-feel/com.cordierite.desktop/contents/splash/images/cordierite_logo.svgz
+cp %{buildroot}%{_datadir}/plasma/look-and-feel/com.valve.vapor.desktop/contents/splash/images/busywidget.svgz %{buildroot}%{_datadir}/plasma/look-and-feel/com.cordierite.desktop/contents/splash/images/busywidget.svgz
 
 # Do post-installation
 %post
@@ -109,6 +119,7 @@ cp %{SOURCE8} %{buildroot}%{_datadir}/color-schemes/Cordierite.colors
 %{_datadir}/plasma/kickeractions/steam.desktop
 %{_datadir}/plasma/look-and-feel/com.valve.vapor.desktop/*
 %{_datadir}/plasma/look-and-feel/com.valve.vgui.desktop/*
+%{_datadir}/plasma/look-and-feel/com.cordierite.desktop/*
 %{_datadir}/themes/*
 %{_datadir}/wallpapers/*
 %{_sysconfdir}/xdg/gtk-2.0/gtkrc
