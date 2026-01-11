@@ -1,0 +1,23 @@
+{
+    "KPackageStructure": "Plasma/LookAndFeel",
+    "KPlugin": {
+        "Authors": [
+            {
+                "Email": "",
+                "Name": "Cordierite"
+            }
+        ],
+        "Category": "",
+        "Description": "Warm salmon and tan theme for Cordierite Linux",
+        "Id": "com.cordierite.desktop",
+        "License": "GPLv2+",
+        "Name": "Cordierite",
+        "ServiceTypes": [
+            "Plasma/LookAndFeel"
+        ],
+        "Version": "1.0",
+        "Website": "https://github.com/pudelromper/cordierite"
+    },
+    "X-KDE-ParentApp": "",
+    "X-Plasma-MainScript": "defaults"
+}

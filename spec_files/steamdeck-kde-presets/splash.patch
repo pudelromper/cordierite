@@ -24,7 +24,7 @@ index d518586..091b59d 100644
              anchors.centerIn: parent
  
 +            asynchronous: true
-             source: "images/bazzite_logo.svgz"
+             source: "images/cordierite_logo.svgz"
  
 -            sourceSize.width: 128
 -            sourceSize.height: 128
@@ -92,7 +92,7 @@ index d518586..091b59d 100644
              anchors.centerIn: parent
  
 +            asynchronous: true
-             source: "images/bazzite_logo.svgz"
+             source: "images/cordierite_logo.svgz"
  
 -            sourceSize.width: 128
 -            sourceSize.height: 128

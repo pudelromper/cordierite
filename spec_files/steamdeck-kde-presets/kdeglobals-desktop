@@ -1,5 +1,5 @@
 [KDE]
-LookAndFeelPackage=org.kde.breeze.desktop
+LookAndFeelPackage=com.cordierite.desktop
 SingleClick=false
 
 [General]

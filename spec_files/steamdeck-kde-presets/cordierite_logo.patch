@@ -6,7 +6,7 @@ diff -Naur a/usr/share/plasma/look-and-feel/com.valve.vapor.desktop/contents/spl
              anchors.centerIn: parent
  
 -            source: "images/deck_logo.svgz"
-+            source: "images/bazzite_logo.svgz"
++            source: "images/cordierite_logo.svgz"
  
              sourceSize.width: 128
              sourceSize.height: 128
@@ -18,7 +18,7 @@ diff -Naur a/usr/share/plasma/look-and-feel/com.valve.vgui.desktop/contents/spla
              anchors.centerIn: parent
  
 -            source: "images/deck_logo.svgz"
-+            source: "images/bazzite_logo.svgz"
++            source: "images/cordierite_logo.svgz"
  
              sourceSize.width: 128
              sourceSize.height: 128

@@ -25,18 +25,18 @@ SECUREBOOT_KEY="/usr/share/ublue-os/sb_pubkey.der"
 SECUREBOOT_DOC_URL="https://docs.bazzite.gg/sb"
 SECUREBOOT_DOC_URL_QR="/usr/share/ublue-os/secure_boot_qr.png"
 
-# Bazzite anaconda profile
+# Cordierite anaconda profile
 : ${VARIANT_ID:?}
-cat >/etc/anaconda/profile.d/bazzite.conf <<EOF
-# Anaconda configuration file for bazzite
+cat >/etc/anaconda/profile.d/cordierite.conf <<EOF
+# Anaconda configuration file for Cordierite
 
 [Profile]
 # Define the profile.
-profile_id = bazzite
+profile_id = cordierite
 
 [Profile Detection]
 # Match os-release values
-os_id = bazzite
+os_id = cordierite
 
 [Network]
 default_on_boot = FIRST_WIRED_WITH_LINK
@@ -69,8 +69,8 @@ EOF
 
 echo "Cordierite release $VERSION_ID ($VERSION_CODENAME)" >/etc/system-release
 
-# Get Artwork
-git clone --depth 1 --quiet https://github.com/ublue-os/bazzite.git /root/packages
+# Get Artwork - use local branding from Cordierite repo
+git clone --depth 1 --quiet https://github.com/pudelromper/cordierite.git /root/packages
 case "${PRETTY_NAME,,}" in
 "bazzite"*|"cordierite"*)
     mkdir -p /usr/share/anaconda/pixmaps/silverblue
@@ -79,8 +79,8 @@ case "${PRETTY_NAME,,}" in
 esac
 
 # Installer icon
-_icon=/root/packages/installer/branding/bazzite-installer.svg
-_icon_symbol=/root/packages/installer/branding/bazzite-installer-symbolic.svg
+_icon=/root/packages/installer/branding/cordierite-installer.svg
+_icon_symbol=/root/packages/installer/branding/cordierite-installer-symbolic.svg
 if [[ -f $_icon ]]; then
     for f in \
         /usr/share/icons/hicolor/48x48/apps/org.fedoraproject.AnacondaInstaller.svg \
