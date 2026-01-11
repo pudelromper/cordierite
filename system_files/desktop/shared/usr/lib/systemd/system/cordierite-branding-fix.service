@@ -1,0 +1,13 @@
+[Unit]
+Description=Fix Cordierite branding for rebased systems
+After=rpm-ostreed.service
+Before=systemd-user-sessions.service graphical.target
+ConditionPathExists=!/etc/cordierite/branding_fixed
+
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+ExecStart=/usr/libexec/cordierite-branding-fix
+
+[Install]
+WantedBy=multi-user.target

@@ -505,6 +505,7 @@ RUN --mount=type=cache,dst=/var/cache \
     chmod +x /usr/libexec/bazzite-rebase-boot-setup && \
     systemctl enable bazzite-hardware-setup.service && \
     systemctl enable bazzite-rebase-boot-setup.service && \
+    systemctl enable cordierite-branding-fix.service && \
     systemctl enable netbird.service && \
     systemctl enable dev-hugepages1G.mount && \
     systemctl enable ds-inhibit.service && \

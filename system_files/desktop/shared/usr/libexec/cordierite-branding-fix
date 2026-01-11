@@ -1,0 +1,92 @@
+#!/usr/bin/bash
+# Fix Cordierite branding for systems that were rebased from other images
+# This script runs once after rebasing to ensure consistent branding
+
+set -euo pipefail
+
+# Script version - increment when making changes that need to re-run
+VER=1
+VER_FILE="/etc/cordierite/branding_version"
+FIXUP_DIR="/etc/cordierite"
+FIXUP_FILE="$FIXUP_DIR/branding_fixed"
+
+log() {
+    echo "[cordierite-branding-fix] $1"
+}
+
+# Check if we've already run this version
+if [[ -f "$VER_FILE" ]]; then
+    VER_RAN=$(cat "$VER_FILE")
+    if [[ "$VER" == "$VER_RAN" ]] && [[ -f "$FIXUP_FILE" ]]; then
+        log "Branding fix v$VER already ran, skipping"
+        exit 0
+    fi
+fi
+
+log "Applying Cordierite branding fixes (v$VER)..."
+
+# Create state directory
+mkdir -p "$FIXUP_DIR"
+
+# Fix KDE About Distro configuration
+# Updates any remaining Bazzite references to Cordierite
+KCM_DISTRO_FILES=(
+    "/etc/xdg/kcm-about-distrorc"
+)
+
+for kcm_file in "${KCM_DISTRO_FILES[@]}"; do
+    if [[ -f "$kcm_file" ]]; then
+        log "Updating $kcm_file..."
+        # Ensure Name is Cordierite
+        if command -v kwriteconfig6 &>/dev/null; then
+            kwriteconfig6 --file "$kcm_file" --group General --key Name "Cordierite"
+            kwriteconfig6 --file "$kcm_file" --group General --key Website "https://github.com/pudelromper/cordierite"
+        elif command -v kwriteconfig5 &>/dev/null; then
+            kwriteconfig5 --file "$kcm_file" --group General --key Name "Cordierite"
+            kwriteconfig5 --file "$kcm_file" --group General --key Website "https://github.com/pudelromper/cordierite"
+        else
+            # Fallback to sed if kwriteconfig not available
+            sed -i 's/Name=Bazzite/Name=Cordierite/g' "$kcm_file" 2>/dev/null || true
+            sed -i 's|Website=https://bazzite.gg|Website=https://github.com/pudelromper/cordierite|g' "$kcm_file" 2>/dev/null || true
+        fi
+    fi
+done
+
+# Update icon symlinks if they still point to bazzite
+ICON_DIR="/usr/share/icons/hicolor"
+for size in 16x16 24x24 32x32 36x36 48x48 96x96 256x256; do
+    ICON_PATH="$ICON_DIR/$size/apps/start-here.png"
+    if [[ -L "$ICON_PATH" ]]; then
+        LINK_TARGET=$(readlink "$ICON_PATH" 2>/dev/null || true)
+        if [[ "$LINK_TARGET" == *"bazzite"* ]]; then
+            log "Updating icon symlink: $ICON_PATH"
+            # Replace bazzite with cordierite in the symlink target
+            NEW_TARGET="${LINK_TARGET//bazzite/cordierite}"
+            ln -sf "$NEW_TARGET" "$ICON_PATH" 2>/dev/null || true
+        fi
+    fi
+done
+
+# Update GTK icon cache if available
+if command -v gtk-update-icon-cache &>/dev/null; then
+    log "Updating GTK icon cache..."
+    gtk-update-icon-cache -f "$ICON_DIR" 2>/dev/null || true
+fi
+
+# Recompile dconf database if available (for GNOME)
+if command -v dconf &>/dev/null; then
+    log "Updating dconf database..."
+    dconf update 2>/dev/null || true
+fi
+
+# Update KDE icon cache if available
+if command -v kbuildsycoca6 &>/dev/null; then
+    log "Rebuilding KDE system cache..."
+    kbuildsycoca6 --noincremental 2>/dev/null || true
+fi
+
+# Mark as completed
+echo "$VER" > "$VER_FILE"
+touch "$FIXUP_FILE"
+
+log "Cordierite branding fix complete (v$VER)"
