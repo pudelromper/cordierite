@@ -2,6 +2,9 @@
 LookAndFeelPackage=com.cordierite.desktop
 SingleClick=false
 
+[KDE Control Module Restrictions][$i]
+kcm_updates=false
+
 [General]
 ColorScheme=Cordierite
 TerminalApplication=kde-ptyxis

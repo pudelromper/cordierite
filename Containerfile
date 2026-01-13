@@ -211,6 +211,7 @@ RUN --mount=type=cache,dst=/var/cache \
         xdotool \
         wmctrl \
         libcec \
+        v4l-utils \
         yad \
         f3 \
         pulseaudio-utils \
@@ -297,15 +298,12 @@ RUN --mount=type=cache,dst=/var/cache \
     chmod +x /usr/bin/winetricks && \
     /ctx/cleanup
 
-# Install yafti-go & ujust-picker from GitHub releases
+# Install ujust-picker from GitHub releases
 RUN --mount=type=cache,dst=/var/cache \
     --mount=type=cache,dst=/var/log \
     --mount=type=bind,from=ctx,source=/,target=/ctx \
     --mount=type=tmpfs,dst=/tmp \
     --mount=type=secret,id=GITHUB_TOKEN \
-    /ctx/ghcurl "$(/ctx/ghcurl "https://api.github.com/repos/ublue-os/yafti-go/releases/latest" -s | jq -r '.assets[] | select(.name == "yafti-go").browser_download_url')" -sL -o /bin/yafti-go && \
-    chmod +x /bin/yafti-go && \
-    chmod +x /usr/libexec/bazzite-yafti-launcher && \
     /ctx/ghcurl "$(/ctx/ghcurl "https://api.github.com/repos/ublue-os/bazzite-ujust-picker/releases/latest" -s | jq -r '.assets[] | select(.name | test("x86_64$")) | .browser_download_url')" -sL -o /usr/bin/ujust-picker && \
     chmod +x /usr/bin/ujust-picker && \
     /ctx/cleanup
@@ -426,7 +424,7 @@ RUN --mount=type=cache,dst=/var/cache \
     echo "import \"/usr/share/ublue-os/just/82-bazzite-apps.just\"" >> /usr/share/ublue-os/justfile && \
     echo "import \"/usr/share/ublue-os/just/82-bazzite-beesd.just\"" >> /usr/share/ublue-os/justfile && \
     echo "import \"/usr/share/ublue-os/just/82-bazzite-cdemu.just\"" >> /usr/share/ublue-os/justfile && \
-    echo "import \"/usr/share/ublue-os/just/82-bazzite-rmlint.just\"" >> /usr/share/ublue-os/justfile && \
+    echo "import \"/usr/share/ublue-os/just/82-bazzite-sunshine.just\"" >> /usr/share/ublue-os/justfile && \
     echo "import \"/usr/share/ublue-os/just/82-bazzite-waydroid.just\"" >> /usr/share/ublue-os/justfile && \
     echo "import \"/usr/share/ublue-os/just/83-bazzite-audio.just\"" >> /usr/share/ublue-os/justfile && \
     echo "import \"/usr/share/ublue-os/just/84-bazzite-virt.just\"" >> /usr/share/ublue-os/justfile && \
@@ -763,9 +761,7 @@ RUN --mount=type=cache,dst=/var/cache \
     dnf5 -y copr enable ublue-os/staging && \
     dnf5 -y install \
         egl-wayland.x86_64 \
-        egl-wayland.i686 \
-        egl-wayland2.x86_64 \
-        egl-wayland2.i686 && \
+        egl-wayland.i686 && \
     /ctx/install-nvidia && \
     rm -f /usr/share/vulkan/icd.d/nouveau_icd.*.json && \
     ln -s libnvidia-ml.so.1 /usr/lib64/libnvidia-ml.so && \
