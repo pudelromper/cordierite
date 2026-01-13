@@ -467,7 +467,6 @@ RUN --mount=type=cache,dst=/var/cache \
         _copr_ublue-os-akmods \
         terra \
         terra-extras \
-        negativo17-fedora-uld \
         negativo17-fedora-multimedia; \
     do \
         sed -i 's@enabled=1@enabled=0@g' /etc/yum.repos.d/$repo.repo; \
