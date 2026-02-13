@@ -123,7 +123,8 @@ configure-beesd ACTION="":
                 ;;
         esac
 
-        size_tb=$((SIZE_BYTES / 1024**4))
+        # Round up to nearest TB by adding 0.5TB-->B and flooring
+        size_tb=$(((SIZE_BYTES + 500000000000) / 1000**4))
         # Clamp filesystem size between min/max for hash table calculation
         # Avoid eating too much memory when bees starts
         size_tb=$(($size_tb < $MIN_FS_TB ? $MIN_FS_TB : $size_tb))
@@ -140,7 +141,7 @@ configure-beesd ACTION="":
         # https://github.com/Zygo/bees/blob/master/docs/options.md#load-management-options
         sudo sed -i "s/^UUID=.*/UUID=${UUID}/" "/etc/bees/${UUID}.conf"
         sudo sed -i "s/# DB_SIZE=.*/DB_SIZE=${db_size}/" "/etc/bees/${UUID}.conf"
-        sudo sed -i "s/# OPTIONS=.*/OPTIONS=\"--strip-paths --no-timestamps --thread-factor 0.5 --throttle-factor 10\"/" "/etc/bees/${UUID}.conf"
+        sudo sed -i "s/# OPTIONS=.*/OPTIONS=\"--strip-paths --no-timestamps --thread-factor 0.125 --thread-min 1 --throttle-factor 50\"/" "/etc/bees/${UUID}.conf"
         echo "Created /etc/bees/${UUID}.conf with DB_SIZE=${db_size} bytes"
 
         # Only start the service if enough memory is free

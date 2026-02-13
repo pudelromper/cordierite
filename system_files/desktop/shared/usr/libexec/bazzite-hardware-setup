@@ -18,17 +18,10 @@ KNOWN_IMAGE_BRANCH=$(cat $KNOWN_IMAGE_BRANCH_FILE)
 KNOWN_FEDORA_VERSION_FILE="/etc/bazzite/fedora_version"
 KNOWN_FEDORA_VERSION=$(cat $KNOWN_FEDORA_VERSION_FILE)
 
-# NVIDIA DRIVER VERSION IDENTIFIERS
-if [[ $IMAGE_NAME =~ "nvidia" ]]; then
-    FLATPAK_NVIDIA_VERSION=$(flatpak list --runtime | grep nvidia | grep -Eo "[0-9]+-[0-9]+-[0-9]+" | tail -1)
-    SYSTEM_NVIDIA_VERSION=$(cat /proc/driver/nvidia/version | grep NVIDIA | grep -Eo "[0-9]+\.[0-9]+\.[0-9]+" | tr '.' '-')
-fi
-
 if [[ "$KNOWN_IMAGE_NAME" == "$IMAGE_NAME" && \
     "$KNOWN_IMAGE_BRANCH" == "$IMAGE_BRANCH" && \
     "$KNOWN_FEDORA_VERSION" == "$FEDORA_VERSION" && \
-    "$HWS_VER_RAN" == "$HWS_VER" && \
-    "$SYSTEM_NVIDIA_VERSION" == "$FLATPAK_NVIDIA_VERSION" ]]; then
+    "$HWS_VER_RAN" == "$HWS_VER" ]]; then
   echo "Hardware setup already ran for version $HWS_VER_RAN, skipping"
   exit 0
 fi
@@ -296,15 +289,7 @@ if [ ! -f /etc/bazzite/fixups/hhd_service_cleanup ]; then
   touch /etc/bazzite/fixups/hhd_service_cleanup
 fi
 
-# Update Nvidia package for Flatpak if there's a mismatch
-if [[ "$SYSTEM_NVIDIA_VERSION" != "$FLATPAK_NVIDIA_VERSION" && \
-    $IMAGE_NAME =~ "nvidia" ]]; then
-  echo "Installing Nvidia Flatpak runtime"
-  flatpak install -y org.freedesktop.Platform.GL.nvidia-$SYSTEM_NVIDIA_VERSION org.freedesktop.Platform.GL32.nvidia-$SYSTEM_NVIDIA_VERSION
-else
-  echo "No Flatpak runtime changes needed"
-fi
-
+# Cordierite security hardening
 sed -i 's/^UMASK.*/UMASK\t\t027/' /etc/login.defs
 sed -i 's/^#*YESCRYPT_COST_FACTOR.*/YESCRYPT_COST_FACTOR 8/' /etc/login.defs
 

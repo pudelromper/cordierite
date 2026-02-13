@@ -31,7 +31,7 @@ COPY system_files/desktop/shared system_files/desktop/${BASE_IMAGE_NAME} /
 COPY firmware /
 
 # Copy Homebrew files from the brew image
-COPY --from=ghcr.io/ublue-os/brew:latest@sha256:63c7219af97c1cae9a2a38e9944dc26f65d0798ab256980649947f96a269e1ce /system_files /
+COPY --from=ghcr.io/ublue-os/brew:latest@sha256:3a49f567df02179f6f2db4c10616122380aaed632dc04c3b25c86135d915f051 /system_files /
 
 # Setup Copr repos
 RUN --mount=type=cache,dst=/var/cache \
@@ -243,6 +243,7 @@ RUN --mount=type=cache,dst=/var/cache \
         waydroid \
         cage \
         wlr-randr \
+        bazzite-portal \
         ls-iommu && \
     systemctl mask iscsi && \
     systemctl mask wpa_supplicant.service && \
@@ -255,6 +256,9 @@ RUN --mount=type=cache,dst=/var/cache \
     cd /tmp/fw-fanctrl && ./install.sh --no-ectool --no-post-install --prefix-dir /usr && cd / && \
     rm -rf /tmp/fw-fanctrl && \
     sed -i 's|uupd|& --disable-module-distrobox|' /usr/lib/systemd/system/uupd.service && \
+    setcap 'cap_sys_admin+p' $(readlink -f /usr/bin/sunshine) && \
+    : "Use sunshine-kms.service instead to workaround upstream issues with BETA" && \
+    sed -i 's|Exec=/usr/bin/env systemctl start --u sunshine|Exec=/usr/bin/env systemctl start --u sunshine-kms|' /usr/share/applications/dev.lizardbyte.app.Sunshine.desktop && \
     dnf5 -y --setopt=install_weak_deps=False install \
         rocm-hip \
         rocm-opencl \
@@ -282,6 +286,7 @@ RUN --mount=type=cache,dst=/var/cache \
         umu-launcher \
         dbus-x11 \
         xdg-user-dirs \
+        xdg-terminal-exec \
         gobject-introspection \
         libFAudio.x86_64 \
         libFAudio.i686 \
@@ -337,7 +342,6 @@ RUN --mount=type=cache,dst=/var/cache \
         sed -i 's@Exec=ptyxis@Exec=kde-ptyxis@g' /usr/share/applications/org.gnome.Ptyxis.desktop && \
         sed -i 's@Keywords=@Keywords=konsole;console;@g' /usr/share/applications/org.gnome.Ptyxis.desktop && \
         cp /usr/share/applications/org.gnome.Ptyxis.desktop /usr/share/kglobalaccel/org.gnome.Ptyxis.desktop && \
-        setcap 'cap_net_raw+ep' /usr/libexec/ksysguard/ksgrd_network_helper && \
         ln -sf /usr/share/wallpapers/convergence.jxl /usr/share/backgrounds/default.jxl && \
         ln -sf /usr/share/wallpapers/convergence.jxl /usr/share/backgrounds/default-dark.jxl && \
         rm -f /usr/share/backgrounds/default.xml && \
@@ -346,7 +350,7 @@ RUN --mount=type=cache,dst=/var/cache \
         chmod +x /usr/bin/cordierite-install-flatpaks \
     ; else \
         declare -A toswap=( \
-            ["copr:copr.fedorainfracloud.org:ublue-os:bazzite-multilib"]="gsettings-desktop-schemas mutter gnome-shell" \
+            ["copr:copr.fedorainfracloud.org:ublue-os:bazzite-multilib"]="mutter gnome-shell" \
         ) && \
         for repo in "${!toswap[@]}"; do \
             for package in ${toswap[$repo]}; do dnf5 -y swap --repo=$repo $package $package; done; \
@@ -427,7 +431,6 @@ RUN --mount=type=cache,dst=/var/cache \
     echo "import \"/usr/share/ublue-os/just/82-bazzite-waydroid.just\"" >> /usr/share/ublue-os/justfile && \
     echo "import \"/usr/share/ublue-os/just/83-bazzite-audio.just\"" >> /usr/share/ublue-os/justfile && \
     echo "import \"/usr/share/ublue-os/just/84-bazzite-virt.just\"" >> /usr/share/ublue-os/justfile && \
-    echo "import \"/usr/share/ublue-os/just/85-bazzite-image.just\"" >> /usr/share/ublue-os/justfile && \
     echo "import \"/usr/share/ublue-os/just/86-bazzite-windows.just\"" >> /usr/share/ublue-os/justfile && \
     echo "import \"/usr/share/ublue-os/just/87-bazzite-framegen.just\"" >> /usr/share/ublue-os/justfile && \
     echo "import \"/usr/share/ublue-os/just/88-bazzite-webapps.just\"" >> /usr/share/ublue-os/justfile && \
@@ -435,6 +438,7 @@ RUN --mount=type=cache,dst=/var/cache \
     echo "import \"/usr/share/ublue-os/just/90-bazzite-picker.just\"" >> /usr/share/ublue-os/justfile && \
     echo "import \"/usr/share/ublue-os/just/90-bazzite-de.just\"" >> /usr/share/ublue-os/justfile && \
     echo "import \"/usr/share/ublue-os/just/91-bazzite-decky.just\"" >> /usr/share/ublue-os/justfile && \
+    echo "import \"/usr/share/ublue-os/just/92-bazzite-verify.just\"" >> /usr/share/ublue-os/justfile && \
     if grep -q "kinoite" <<< "${BASE_IMAGE_NAME}"; then \
       systemctl enable usr-share-sddm-themes.mount && \
       mkdir -p "/usr/share/ublue-os/dconfs/desktop-kinoite/" && \
@@ -509,12 +513,15 @@ RUN --mount=type=cache,dst=/var/cache \
     systemctl --global enable bazzite-user-setup.service && \
     systemctl --global enable podman.socket && \
     systemctl --global enable systemd-tmpfiles-setup.service && \
+    systemctl --global disable sunshine.service && \
+    systemctl --global disable sunshine-kms.service && \
     systemctl disable waydroid-container.service && \
     systemctl enable greenboot-healthcheck.service && \
     systemctl enable greenboot-set-rollback-trigger.service && \
     systemctl disable force-wol.service && \
     systemctl disable cups.socket cups.service cups.path && \
     systemctl --global enable bazzite-dynamic-fixes.service && \
+    systemctl --global enable ntfs-nag.service && \
     /ctx/ghcurl "https://raw.githubusercontent.com/doitsujin/dxvk/master/dxvk.conf" -Lo /etc/dxvk-example.conf && \
     /ctx/ghcurl "https://raw.githubusercontent.com/ublue-os/waydroid-scripts/main/waydroid-choose-gpu.sh" -Lo /usr/bin/waydroid-choose-gpu && \
     chmod +x /usr/bin/waydroid-choose-gpu && \
