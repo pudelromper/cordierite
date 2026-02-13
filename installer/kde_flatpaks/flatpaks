@@ -11,13 +11,17 @@ app/com.github.tchx84.Flatseal/x86_64/stable
 app/com.github.Matoking.protontricks/x86_64/stable
 app/io.github.flattool.Warehouse/x86_64/stable
 app/com.vysp3r.ProtonPlus/x86_64/stable
-runtime/org.freedesktop.Platform.VulkanLayer.vkBasalt/x86_64/23.08
+runtime/com.obsproject.Studio.Plugin.OBSVkCapture/x86_64/stable
+runtime/com.obsproject.Studio.Plugin.Gstreamer/x86_64/stable
+runtime/com.obsproject.Studio.Plugin.GStreamerVaapi/x86_64/stable
+runtime/org.freedesktop.Platform.VulkanLayer.MangoHud/x86_64/25.08
+runtime/org.freedesktop.Platform.VulkanLayer.vkBasalt/x86_64/25.08
+runtime/org.freedesktop.Platform.VulkanLayer.OBSVkCapture/x86_64/25.08
 app/org.zotero.Zotero/x86_64/stable
 app/org.kde.konsole/x86_64/stable
 app/org.kde.ark/x86_64/stable
 app/org.kde.kate/x86_64/stable
 app/org.kde.kdenlive/x86_64/stable
-app/org.kde.kcalc/x86_64/stable
 app/org.kde.calligra/x86_64/stable
 app/org.kde.cantor/x86_64/stable
 app/org.kde.arianna/x86_64/stable
@@ -27,7 +31,6 @@ app/org.kde.kolourpaint/x86_64/stable
 app/org.kde.kcolorchooser/x86_64/stable
 app/org.kde.kfind/x86_64/stable
 app/org.kde.kcharselect/x86_64/stable
-app/org.kde.haruna/x86_64/stable
 app/org.kde.kompare/x86_64/stable
 app/org.kde.skanlite/x86_64/stable
 app/org.kde.isoimagewriter/x86_64/stable
@@ -41,7 +44,6 @@ app/org.kde.francis/x86_64/stable
 app/org.kde.keysmith/x86_64/stable
 app/org.kde.minuet/x86_64/stable
 app/org.kde.ktorrent/x86_64/stable
-app/org.kde.cantor/x86_64/stable
 app/org.kde.kbreakout/x86_64/stable
 app/org.kde.skanpage/x86_64/stable
 app/org.kde.elisa/x86_64/stable
@@ -61,5 +63,3 @@ app/org.kde.kbounce/x86_64/stable
 app/org.kde.kdiamond/x86_64/stable
 app/org.kde.kbibtex/x86_64/stable
 app/org.kde.komodo/x86_64/stable
-
-
