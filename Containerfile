@@ -258,7 +258,7 @@ RUN --mount=type=cache,dst=/var/cache \
     sed -i 's|uupd|& --disable-module-distrobox|' /usr/lib/systemd/system/uupd.service && \
     { SUNSHINE_BIN="$(readlink -f /usr/bin/sunshine 2>/dev/null)"; [ -f "$SUNSHINE_BIN" ] && setcap 'cap_sys_admin+p' "$SUNSHINE_BIN" || true; } && \
     : "Use sunshine-kms.service instead to workaround upstream issues with BETA" && \
-    sed -i 's|Exec=/usr/bin/env systemctl start --u sunshine|Exec=/usr/bin/env systemctl start --u sunshine-kms|' /usr/share/applications/dev.lizardbyte.app.Sunshine.desktop && \
+    { [ -f /usr/share/applications/dev.lizardbyte.app.Sunshine.desktop ] && sed -i 's|Exec=/usr/bin/env systemctl start --u sunshine|Exec=/usr/bin/env systemctl start --u sunshine-kms|' /usr/share/applications/dev.lizardbyte.app.Sunshine.desktop || true; } && \
     dnf5 -y --setopt=install_weak_deps=False install \
         rocm-hip \
         rocm-opencl \
