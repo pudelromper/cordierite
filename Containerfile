@@ -253,10 +253,10 @@ RUN --mount=type=cache,dst=/var/cache \
     chmod +x /usr/bin/framework_tool && \
     git clone --depth 1 https://github.com/TamtamHero/fw-fanctrl.git /tmp/fw-fanctrl && \
     pip install --prefix=/usr build && \
-    cd /tmp/fw-fanctrl && ./install.sh --no-ectool --no-post-install --prefix-dir /usr && cd / && \
+    cd /tmp/fw-fanctrl && ./install.sh --no-ectool --no-pre-uninstall --no-post-install --prefix-dir /usr && cd / && \
     rm -rf /tmp/fw-fanctrl && \
     sed -i 's|uupd|& --disable-module-distrobox|' /usr/lib/systemd/system/uupd.service && \
-    setcap 'cap_sys_admin+p' $(readlink -f /usr/bin/sunshine) && \
+    { SUNSHINE_BIN="$(readlink -f /usr/bin/sunshine 2>/dev/null)"; [ -f "$SUNSHINE_BIN" ] && setcap 'cap_sys_admin+p' "$SUNSHINE_BIN" || true; } && \
     : "Use sunshine-kms.service instead to workaround upstream issues with BETA" && \
     sed -i 's|Exec=/usr/bin/env systemctl start --u sunshine|Exec=/usr/bin/env systemctl start --u sunshine-kms|' /usr/share/applications/dev.lizardbyte.app.Sunshine.desktop && \
     dnf5 -y --setopt=install_weak_deps=False install \
