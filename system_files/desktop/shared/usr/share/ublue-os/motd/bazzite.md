@@ -11,5 +11,5 @@
 
 %TIP%
 - **** [Report an issue](https://github.com/pudelromper/cordierite/issues/)
-- **󰈙** [Bazzite Docs](http://docs.bazzite.gg/)
+- **󰈙** [Documentation](https://docs.bazzite.gg/)
 - **󰙯** [Discussions](https://github.com/pudelromper/cordierite/discussions)

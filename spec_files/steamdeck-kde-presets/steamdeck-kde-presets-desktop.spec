@@ -21,6 +21,7 @@ Source8:        Cordierite.colors
 Source9:        look-and-feel/com.cordierite.desktop/metadata.json
 Source10:       look-and-feel/com.cordierite.desktop/contents/defaults
 Source11:       look-and-feel/com.cordierite.desktop/contents/splash/Splash.qml
+Source12:       kscreenlockerrc
 Patch0:         multiuser.patch
 Patch1:         lockscreen.patch
 Patch2:         cordierite_logo.patch
@@ -95,6 +96,7 @@ cp %{SOURCE10} %{buildroot}%{_datadir}/plasma/look-and-feel/com.cordierite.deskt
 cp %{SOURCE11} %{buildroot}%{_datadir}/plasma/look-and-feel/com.cordierite.desktop/contents/splash/Splash.qml
 cp %{SOURCE3} %{buildroot}%{_datadir}/plasma/look-and-feel/com.cordierite.desktop/contents/splash/images/cordierite_logo.svgz
 cp %{buildroot}%{_datadir}/plasma/look-and-feel/com.valve.vapor.desktop/contents/splash/images/busywidget.svgz %{buildroot}%{_datadir}/plasma/look-and-feel/com.cordierite.desktop/contents/splash/images/busywidget.svgz
+cp %{SOURCE12} %{buildroot}%{_sysconfdir}/xdg/kscreenlockerrc
 
 # Do post-installation
 %post
@@ -127,6 +129,7 @@ cp %{buildroot}%{_datadir}/plasma/look-and-feel/com.valve.vapor.desktop/contents
 %{_sysconfdir}/xdg/kdeglobals
 %{_sysconfdir}/xdg/ktrashrc
 %{_sysconfdir}/xdg/plasma-org.kde.plasma.desktop-appletsrc
+%{_sysconfdir}/xdg/kscreenlockerrc
 
 # Finally, changes from the latest release of your application are generated from
 # your project's Git history. It will be empty until you make first annotated Git tag.

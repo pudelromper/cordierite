@@ -21,8 +21,27 @@ mount -o remount,rw /proc/sys
 curl --retry 3 -Lo /etc/flatpak/remotes.d/flathub.flatpakrepo https://dl.flathub.org/repo/flathub.flatpakrepo
 xargs -r flatpak install -y --noninteractive <"/src/$FLATPAK_DIR_SHORTNAME/flatpaks"
 
+# Mount an overlayfs in in order to avoid flatpak files being altered by users on the live session
+mv -T /var/lib/flatpak{,_original}
+mkdir -p /var/lib/flatpak{,.work}
+cat <<EOF >/etc/systemd/system/var-lib-flatpak.mount
+[Mount]
+Type=overlay
+What=overlay
+Options=lowerdir=/var/lib/flatpak_original,upperdir=/var/lib/flatpak,workdir=/var/lib/flatpak.work
+
+[Install]
+WantedBy=multi-user.target
+EOF
+systemctl enable var-lib-flatpak.mount
+
 # Pull the container image to be installed
-podman pull "$INSTALL_IMAGE_PAYLOAD"
+if mountpoint -q /usr/lib/containers/storage; then
+    # We load our image from the host container storage if possible
+    podman save --format oci-archive "$INSTALL_IMAGE_PAYLOAD" | podman load --storage-opt additionalimagestore=''
+else
+    podman pull "$INSTALL_IMAGE_PAYLOAD"
+fi
 
 # Run the preinitramfs hook
 "$SCRIPT_DIR/titanoboa_hook_preinitramfs.sh"

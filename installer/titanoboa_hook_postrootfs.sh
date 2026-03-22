@@ -15,6 +15,9 @@ mkdir -p /var/lib/rpm-state # Needed for Anaconda Web UI
 # Utilities for displaying a dialog prompting users to review secure boot documentation
 dnf install -qy --setopt=install_weak_deps=0 qrencode yad
 
+# Install conky to display hardware information on the desktop
+dnf install -qy --setopt=install_weak_deps=0 conky
+
 # Variables
 imageref="$(podman images --format '{{ index .Names 0 }}' | grep -E '(cordierite|bazzite)' | head -1)"
 imageref="${imageref##*://}"
@@ -182,6 +185,7 @@ ostreecontainer --url=$imageref:$imagetag --transport=containers-storage --no-si
 %include /usr/share/anaconda/post-scripts/install-configure-upgrade.ks
 %include /usr/share/anaconda/post-scripts/disable-fedora-flatpak.ks
 %include /usr/share/anaconda/post-scripts/install-flatpaks.ks
+%include /usr/share/anaconda/post-scripts/flatpak-restore-selinux-labels.ks
 %include /usr/share/anaconda/post-scripts/secureboot-enroll-key.ks
 %include /usr/share/anaconda/post-scripts/secureboot-docs.ks
 
@@ -190,10 +194,7 @@ EOF
 # Signed Images
 cat <<EOF >>/usr/share/anaconda/post-scripts/install-configure-upgrade.ks
 %post --erroronfail --log=/tmp/anacoda_custom_logs/bootc-switch.log
-# bootc switch --mutate-in-place --enforce-container-sigpolicy --transport registry $imageref:$imagetag
-
-# DELETEME: This is a nasty hack. Remove whenever http://github.com/bootc-dev/bootc/commit/f7b41cc1ebfc823e9de848b55773faddc59ecf88 makes it into a release
-sed -i 's|container-image-reference=.*|container-image-reference=ostree-image-signed:docker://$imageref:$imagetag|' /ostree/deploy/default/deploy/*.origin
+bootc switch --mutate-in-place --enforce-container-sigpolicy --transport registry $imageref:$imagetag
 %end
 EOF
 
@@ -238,29 +239,6 @@ LC_ALL=C mokutil -t "\$SECUREBOOT_KEY" | grep -q "is already in the enrollment r
 EOF
 
 qrencode -o "$SECUREBOOT_DOC_URL_QR" "$SECUREBOOT_DOC_URL"
-
-# Install Flatpaks
-cat <<'EOF' >>/usr/share/anaconda/post-scripts/install-flatpaks.ks
-%post --erroronfail --nochroot --log=/tmp/anacoda_custom_logs/install-flatpaks.log
-deployment="$(ostree rev-parse --repo=/mnt/sysimage/ostree/repo ostree/0/1/0)"
-target="/mnt/sysimage/ostree/deploy/default/deploy/$deployment.0/var/lib/"
-mkdir -p "$target"
-rsync -aAXUHKP /var/lib/flatpak "$target"
-%end
-EOF
-
-# Disable Fedora Flatpak Repo
-cat <<EOF >>/usr/share/anaconda/post-scripts/disable-fedora-flatpak.ks
-%post --erroronfail --log=/tmp/anacoda_custom_logs/disable-fedora-flatpak.log
-systemctl disable flatpak-add-fedora-repos.service || :
-%end
-EOF
-
-# Set Anaconda Payload to use flathub
-cat <<EOF >>/etc/anaconda/conf.d/anaconda.conf
-[Payload]
-flatpak_remote = flathub https://dl.flathub.org/repo/
-EOF
 
 # TODO (@Zeglius): Hide grub by default and set timeout to 5 seconds
 # # Hide grub by default and set timeout to 5 seconds
@@ -434,181 +412,6 @@ EOF
 
 ### Desktop-enviroment specific tweaks ###
 # Setup script to show dialog popups at login
-echo '#!/usr/bin/bash' >/usr/bin/on_gui_login.sh
-chmod +x /usr/bin/on_gui_login.sh
-mkdir -p /etc/skel/.config/autostart
-cat >>/usr/bin/on_gui_login.sh <<'EOF'
-# if CSM/Legacy show blocking message and power off
-if [[ ! -d /sys/firmware/efi ]]; then
-    yad --undecorated --on-top --timeout=0 --button=Shutdown:0 \
-        --text="Bazzite does not support CSM/Legacy Boot. Please boot into your UEFI/BIOS settings, disable CSM/Legacy Mode, and reboot." || true
-    systemctl poweroff || shutdown -h now || true
-fi
-EOF
-#serve docs in live session
-cat >>/usr/bin/on_gui_login.sh <<'EOF'
-serve_docs(){
-  ADDRESS=127.0.0.1
-  PORT=1290
-  { python -m http.server -b $ADDRESS $PORT -d /usr/share/ublue-os/docs/html; } >/dev/null 2>&1 &
-  if [[ $- == *i* ]]; then
-      fg >/dev/null 2>&1 || true
-  fi
-}
-EOF
-# Warn about limited capabilities of live sessions, and also show buttons to:
-#   - Install Bazzite
-#   - Launch Bootloader Restoring tool
-#   - Close dialog
-cat >>/usr/bin/on_gui_login.sh <<'EOF'
-welcome_dialog() {
-_EXITLOCK=1
-_RETVAL=0
-while [[ $_EXITLOCK -eq 1 ]]; do
-    yad \
-        --no-escape \
-        --on-top \
-        --timeout-indicator=bottom \
-        --text-align=center \
-        --buttons-layout=center \
-        --title="Welcome" \
-        --text="\nWelcome to the Live ISO for Bazzite\!\n\nThe Live ISO is designed for installation and troubleshooting.\nIt does <b>not</b> have drivers and is <b>not capable of playing games.</b>\n\nPlease <b>do not use it in benchmarks</b> as it\ndoes not represent the installed experience.\n" \
-         --button="Install Bazzite":10 \
-        --button="Launch Bootloader Restoring tool":20 \
-        --button="Close dialog":0
-    _RETVAL=$?
-    case $_RETVAL in
-        10)
-            liveinst & disown $!
-            _EXITLOCK=0
-            ;;
-        20)
-            /usr/bin/bootloader_restore.sh & disown $!
-            _EXITLOCK=0
-            ;;
-        0) _EXITLOCK=0 ;;
-    esac
-done
-unset -v _EXITLOCK
-unset -v _RETVAL
-}
-EOF
-# Warn the user if they're using an unsupported nvidia card, or trying to install the wrong image for nvidia
-cat >>/usr/bin/on_gui_login.sh <<'EOF'
-nvidia_hardware_helper () {
-timeout_seconds=15
-gpuinfo="$(timeout $timeout_seconds lspci -nn | grep '\[03')"
-if [ $? -ne 0 ]; then
-  return 124
-fi
-image_name=$(timeout $timeout_seconds sudo podman images --format '{{ index .Names 0 }}\n' 'bazzite*')
-if [ -z "$image_name" ]; then
-  return 124
-fi
-#call NVIDIA detection script TODO: change path
-if [[ -f "/usr/libexec/bazzite_detect_nvidia_support_status"  ]]; then
-output=$("/usr/libexec/bazzite_detect_nvidia_support_status")
-ret_val=$?
-# handle exit codes
-if [ $ret_val -eq 0 ] && [ "$output" == "" ]
-  then
-    echo "no NVIDIA GPU"
-    return 0
-fi
-if [ $ret_val  -eq 124 ]
-  then
-    return 124
-fi
-support_status=$output
-echo "support status: $support_status"
-if [ "$support_status" == "legacy" ]; then
-  correct_image="\"<b>Nvidia (GTX 9xx-10xx Series)</b>\""
-fi
-if [ "$support_status" == "supported" ]; then
-  correct_image="\"<b>Nvidia (RTX Series | GTX 16xx Series+)</b>\""
-fi
-# parse image information
-echo "image name: ""$image_name"
-  if [[ $image_name == *-nvidia-open* ]] || [[ $image_name == *-deck-nvidia* ]]; then
-    echo "modern nvidia image detected!"
-    image="modern"
-  elif [[ $image_name == *-nvidia:* ]]; then
-    echo "legacy nvidia image detected!"
-    image="legacy"
-  else
-    echo "AMD/Intel image detected!"
-    image="amd_intel"
-  fi
-#user facing text
-title="Bazzite Hardware Helper"
-heading_unsupported="<b>Unsupported Graphics Card</b>\n"
-detected_unsupported="We've detected you're using a now unsupported NVIDIA GPU.\nUnfortunately, we cannot provide good support for your hardware ourselves.\n\n"
-recommend_unsupported="Please read our <a href=\"http://127.0.0.1:1290/General/FAQ/#will-support-for-much-older-nvidia-graphics-cards-be-added\"><b>documentation</b></a> for more information.\n"
-heading_unknown="<b>Unknown Graphics Card</b>\n"
-detected_unknown="We could not identify your NVIDIA graphics card.\n\n"
-recommend_unknown="It is not recommended to install Bazzite as we cannot guarantee your hardware will work."
-heading_wrong_image="<b>WRONG IMAGE DETECTED</b>\n"
-detected_wrong_image="Your $support_status NVIDIA graphics card needs a different version of Bazzite.\n\n"
-recommend_wrong_image="Pick $correct_image as \"vendor of your primary GPU\" on the website to download and install the correct version instead."
-button1="I KNOW WHAT I AM DOING. Install Bazzite Anyway:0"
-button2="Power Off:1"
-heading2="Detected Graphics Adapter"
-button3="GPU Information:2"
-if [[ "$support_status" = "unsupported" ]]; then
-  serve_docs
-  heading="$heading_unsupported"
-  gpu_detected="$detected_unsupported"
-  recommendation="$recommend_unsupported"
-elif [[ "$support_status" = "unknown" ]]; then
-  heading="$heading_unknown"
-  gpu_detected="$detected_unknown"
-  recommendation="$recommend_unknown"
-elif [[ "$support_status" = "legacy" ]] && [[ "$image" = "legacy" ]]; then
-  echo "legacy GPU matches legacy image. Nothing to do. Exiting…"
-  return 0
-elif [[ "$support_status" = "supported" ]] && [[ "$image"  = "modern"  ]]; then
-  echo "supported GPU matches modern image. Nothing to do. Exiting…"
-  return 0
-elif [[ "$support_status" = "supported" ]] && [[ "$image"  != "modern" ]]; then
-  heading="$heading_wrong_image"
-  correct_image=
-  gpu_detected="$detected_wrong_image"
-  recommendation="$recommend_wrong_image"
-elif [[ "$support_status" = "legacy" ]] && [[ "$image" != "legacy" ]]; then
-  heading="$heading_wrong_image"
-  gpu_detected="$detected_wrong_image"
-  recommendation="$recommend_wrong_image"
-fi
-  while true; do
-#YAD dialog
-  yad --warning --buttons-layout=center --text-align=center --title="$title" --text="$heading""$gpu_detected""$recommendation"\
-      --button="$button1" \
-      --button="$button2" \
-      --button="$button3"
-      case $? in
-           0) return 0;;
-           1) systemctl poweroff || shutdown -h now || true
-             break;;
-           2) yad --info --title="$heading2" --text="$gpuinfo" ;;
-      esac
-  done
-  fi
-}
-nvidia_hardware_helper
-result=$?
-if [ $result -eq 0 ] || [ $result -eq 1 ] || [ $result -eq 124 ]
-then
-  echo 'launch welcome dialog'
-    welcome_dialog
-fi
-EOF
-
-cat >/etc/skel/.config/autostart/on_gui_login.desktop <<'EOF'
-[Desktop Entry]
-Exec=/usr/bin/on_gui_login.sh
-Icon=application-x-shellscript
-Type=Application
-EOF
 
 # Use GSK_RENDERER=gl for nvidia, workaround for GTK apps not opening.
 if [[ $imageref == *-nvidia* ]]; then
@@ -660,6 +463,17 @@ dnf -yq remove steam lutris bazaar || :
     rm -f /usr/share/backgrounds/default.xml
 )
 
+echo "Copying shared system files..."
+cp -a /src/system_files/shared/. /
+
+if [[ "$desktop_env" == "gnome" ]]; then
+    echo "Copying GNOME-specific system files..."
+    cp -a /src/system_files/gnome/. /
+elif [[ "$desktop_env" == "kde" ]]; then
+    echo "Copying KDE-specific system files..."
+    cp -a /src/system_files/kde/. /
+fi
+
 # Enable on-screen keyboard
 if [[ $imageref == *-deck* ]]; then
     # Enable keyboard here
@@ -673,6 +487,12 @@ if [[ $imageref == *-deck* ]]; then
     fi
 fi
 
+# Change default pins for KDE
+if [[ $desktop_env == kde ]]; then
+    sed -i '/const allPanels/,$d' /usr/share/plasma/layout-templates/org.kde.plasma.desktop.defaultPanel/contents/layout.js
+    sed -i '$r /usr/share/plasma/shells/org.kde.plasma.desktop/contents/updates/bazzite-pins.js' /usr/share/plasma/layout-templates/org.kde.plasma.desktop.defaultPanel/contents/layout.js
+fi
+
 # Don't start the fedora-welcome app (gnome only)
 if [[ $desktop_env == gnome ]]; then
     sed -i 's| Fedora| Cordierite|' /usr/share/anaconda/gnome/fedora-welcome || :
@@ -680,28 +500,9 @@ if [[ $desktop_env == gnome ]]; then
     sed -i 's@\[Desktop Entry\]@\[Desktop Entry\]\nHidden=true@g' /usr/share/anaconda/gnome/org.fedoraproject.welcome-screen.desktop || :
 fi
 
-# Let only browser/installer/file manager in the task-bar/dock, set new background for GNOME
-if [[ $desktop_env == kde ]]; then
-    sed -i '/<entry name="launchers" type="StringList">/,/<\/entry>/ s/<default>[^<]*<\/default>/<default>preferred:\/\/browser,applications:liveinst.desktop,preferred:\/\/filemanager<\/default>/' \
-        /usr/share/plasma/plasmoids/org.kde.plasma.taskmanager/contents/config/main.xml
-elif [[ $desktop_env == gnome ]]; then
-    cat >/usr/share/glib-2.0/schemas/zz2-org.gnome.shell.gschema.override <<EOF
-[org.gnome.shell]
-favorite-apps = ['anaconda.desktop', 'org.mozilla.firefox.desktop', 'org.gnome.Nautilus.desktop']
-[org.gnome.desktop.background]
-picture-uri="file:///usr/share/wallpapers/convergence.jxl"
-picture-uri-dark="file:///usr/share/wallpapers/convergence.jxl"
-EOF
+# Set new background for GNOME
+if [[ $desktop_env == gnome ]]; then
     glib-compile-schemas /usr/share/glib-2.0/schemas
-fi
-
-# Disable kde wallet
-if [[ $desktop_env == kde ]]; then
-    mkdir -p /etc/skel/.config
-    cat >/etc/skel/.config/kwalletrc <<'EOF'
-[Wallet]
-Enabled=false
-EOF
 fi
 
 # Install Gparted

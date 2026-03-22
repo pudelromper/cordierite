@@ -27,11 +27,17 @@ ARG SHA_HEAD_SHORT="${SHA_HEAD_SHORT}"
 ARG VERSION_TAG="${VERSION_TAG}"
 ARG VERSION_PRETTY="${VERSION_PRETTY}"
 
-COPY system_files/desktop/shared system_files/desktop/${BASE_IMAGE_NAME} /
+RUN --mount=type=bind,target=/tmp/context \
+    cp -a /tmp/context/system_files/desktop/shared/. /tmp/context/system_files/desktop/${BASE_IMAGE_NAME}/. / && \
+    find /usr/share/ublue-os/docs -type f -exec setfattr -n user.component -v "ublue-docs" {} +
+
 COPY firmware /
 
 # Copy Homebrew files from the brew image
-COPY --from=ghcr.io/ublue-os/brew:latest@sha256:3a49f567df02179f6f2db4c10616122380aaed632dc04c3b25c86135d915f051 /system_files /
+ARG BREW_IMAGE=ghcr.io/ublue-os/brew:latest@sha256:ca91068f51ce663d495ccfc829352d6621ec95f6c7db447ade55023b222f9762
+RUN --mount=type=bind,from=${BREW_IMAGE},source=/system_files,target=/tmp/brew_source \
+    cp -a /tmp/brew_source/. / && \
+    find /tmp/brew_source -type f -printf '/%P\0' | xargs -0 setfattr -n user.component -v "homebrew"
 
 # Setup Copr repos
 RUN --mount=type=cache,dst=/var/cache \
@@ -46,7 +52,6 @@ RUN --mount=type=cache,dst=/var/cache \
         ublue-os/staging \
         ublue-os/packages \
         ycollet/audinux \
-        ublue-os/rom-properties \
         ublue-os/hhd \
         lizardbyte/beta \
         che/nerd-fonts; \
@@ -68,7 +73,7 @@ RUN --mount=type=cache,dst=/var/cache \
     dnf5 -y config-manager setopt "linux-surface".enabled=false && \
     dnf5 -y config-manager setopt "*bazzite*".priority=1 && \
     dnf5 -y config-manager setopt "*terra*".priority=3 "*terra*".exclude="nerd-fonts topgrade scx-tools scx-scheds steam python3-protobuf zlib-devel" && \
-    dnf5 -y config-manager setopt "terra-mesa".enabled=true && \
+    dnf5 -y config-manager setopt "terra-mesa".enabled=false && \
     eval "$(/ctx/dnf5-setopt setopt '*negativo17*' priority=4 exclude='mesa-* *xone*')" && \
     dnf5 -y config-manager setopt "*rpmfusion*".priority=5 "*rpmfusion*".exclude="mesa-*" && \
     dnf5 -y config-manager setopt "*fedora*".exclude="mesa-* kernel-core-* kernel-modules-* kernel-uki-virt-*" && \
@@ -84,6 +89,49 @@ RUN --mount=type=cache,dst=/var/cache \
     /ctx/install-kernel && \
     dnf5 -y config-manager setopt "*rpmfusion*".enabled=0 && \
     rm -rf /.git && \
+    dnf5 -y remove --no-autoremove \
+        linux-firmware-whence \
+        qcom-wwan-firmware \
+        linux-firmware \
+        amd-gpu-firmware \
+        amd-ucode-firmware \
+        atheros-firmware \
+        brcmfmac-firmware \
+        cirrus-audio-firmware \
+        intel-audio-firmware \
+        intel-gpu-firmware \
+        intel-vsc-firmware \
+        iwlegacy-firmware \
+        iwlwifi-dvm-firmware \
+        iwlwifi-mvm-firmware \
+        libertas-firmware \
+        mt7xxx-firmware \
+        nvidia-gpu-firmware \
+        nxpwireless-firmware \
+        realtek-firmware \
+        tiwilink-firmware && \
+    dnf5 -y install \
+        https://kojipkgs.fedoraproject.org/packages/linux-firmware/20260309/1.fc45/noarch/linux-firmware-20260309-1.fc45.noarch.rpm \
+        https://kojipkgs.fedoraproject.org/packages/linux-firmware/20260309/1.fc45/noarch/linux-firmware-whence-20260309-1.fc45.noarch.rpm \
+        https://kojipkgs.fedoraproject.org/packages/linux-firmware/20260309/1.fc45/noarch/iwlwifi-mld-firmware-20260309-1.fc45.noarch.rpm \
+        https://kojipkgs.fedoraproject.org/packages/linux-firmware/20260309/1.fc45/noarch/iwlwifi-dvm-firmware-20260309-1.fc45.noarch.rpm \
+        https://kojipkgs.fedoraproject.org/packages/linux-firmware/20260309/1.fc45/noarch/amd-gpu-firmware-20260309-1.fc45.noarch.rpm \
+        https://kojipkgs.fedoraproject.org/packages/linux-firmware/20260309/1.fc45/noarch/amd-ucode-firmware-20260309-1.fc45.noarch.rpm \
+        https://kojipkgs.fedoraproject.org/packages/linux-firmware/20260309/1.fc45/noarch/atheros-firmware-20260309-1.fc45.noarch.rpm \
+        https://kojipkgs.fedoraproject.org/packages/linux-firmware/20260309/1.fc45/noarch/brcmfmac-firmware-20260309-1.fc45.noarch.rpm \
+        https://kojipkgs.fedoraproject.org/packages/linux-firmware/20260309/1.fc45/noarch/cirrus-audio-firmware-20260309-1.fc45.noarch.rpm \
+        https://kojipkgs.fedoraproject.org/packages/linux-firmware/20260309/1.fc45/noarch/intel-audio-firmware-20260309-1.fc45.noarch.rpm \
+        https://kojipkgs.fedoraproject.org/packages/linux-firmware/20260309/1.fc45/noarch/intel-gpu-firmware-20260309-1.fc45.noarch.rpm \
+        https://kojipkgs.fedoraproject.org/packages/linux-firmware/20260309/1.fc45/noarch/intel-vsc-firmware-20260309-1.fc45.noarch.rpm \
+        https://kojipkgs.fedoraproject.org/packages/linux-firmware/20260309/1.fc45/noarch/iwlegacy-firmware-20260309-1.fc45.noarch.rpm \
+        https://kojipkgs.fedoraproject.org/packages/linux-firmware/20260309/1.fc45/noarch/iwlwifi-mvm-firmware-20260309-1.fc45.noarch.rpm \
+        https://kojipkgs.fedoraproject.org/packages/linux-firmware/20260309/1.fc45/noarch/libertas-firmware-20260309-1.fc45.noarch.rpm \
+        https://kojipkgs.fedoraproject.org/packages/linux-firmware/20260309/1.fc45/noarch/mt7xxx-firmware-20260309-1.fc45.noarch.rpm \
+        https://kojipkgs.fedoraproject.org/packages/linux-firmware/20260309/1.fc45/noarch/nvidia-gpu-firmware-20260309-1.fc45.noarch.rpm \
+        https://kojipkgs.fedoraproject.org/packages/linux-firmware/20260309/1.fc45/noarch/nxpwireless-firmware-20260309-1.fc45.noarch.rpm \
+        https://kojipkgs.fedoraproject.org/packages/linux-firmware/20260309/1.fc45/noarch/qcom-wwan-firmware-20260309-1.fc45.noarch.rpm \
+        https://kojipkgs.fedoraproject.org/packages/linux-firmware/20260309/1.fc45/noarch/realtek-firmware-20260309-1.fc45.noarch.rpm \
+        https://kojipkgs.fedoraproject.org/packages/linux-firmware/20260309/1.fc45/noarch/tiwilink-firmware-20260309-1.fc45.noarch.rpm && \
     /ctx/cleanup
 
 # Install patched fwupd
@@ -96,7 +144,8 @@ RUN --mount=type=cache,dst=/var/cache \
         iptsd \
         libwacom-surface && \
     dnf5 -y remove \
-        pipewire-config-raop && \
+        pipewire-config-raop \
+        mesa-va-drivers && \
     dnf5 -y config-manager setopt excludepkgs=NetworkManager-openvpn && \
     rm -f /usr/lib/sysusers.d/nm-openvpn-sysusers.conf && \
     declare -A toswap=( \
@@ -106,7 +155,7 @@ RUN --mount=type=cache,dst=/var/cache \
         ["copr:copr.fedorainfracloud.org:ublue-os:staging"]="fwupd" \
     ) && \
     for repo in "${!toswap[@]}"; do \
-        for package in ${toswap[$repo]}; do dnf5 -y swap --repo=$repo $package $package; done; \
+        for package in ${toswap[$repo]}; do dnf5 -y swap --from-repo=$repo $package $package; done; \
     done && unset -v toswap repo package && \
     dnf5 versionlock add \
         pipewire \
@@ -130,7 +179,6 @@ RUN --mount=type=cache,dst=/var/cache \
         mesa-libEGL \
         mesa-libGL \
         mesa-libgbm \
-        mesa-va-drivers \
         mesa-vulkan-drivers \
         fwupd \
         fwupd-plugin-flashrom \
@@ -140,7 +188,6 @@ RUN --mount=type=cache,dst=/var/cache \
         NetworkManager-wifi \
         NetworkManager-libnm && \
     dnf5 -y install \
-        mesa-va-drivers.i686 \
         libfreeaptx && \
     dnf5 -y install --enable-repo="*rpmfusion*" --disable-repo="*fedora-multimedia*" \
         libaacs \
@@ -196,6 +243,7 @@ RUN --mount=type=cache,dst=/var/cache \
         libinput-utils \
         i2c-tools \
         lm_sensors \
+        iio-sensor-proxy \
         fw-ectool \
         framework-system \
         udica \
@@ -248,8 +296,6 @@ RUN --mount=type=cache,dst=/var/cache \
     systemctl mask iscsi && \
     systemctl mask wpa_supplicant.service && \
     systemctl disable iwd.service && \
-    mkdir -p /usr/lib/extest/ && \
-    /ctx/ghcurl "$(/ctx/ghcurl https://api.github.com/repos/ublue-os/extest/releases/latest | jq -r '.assets[] | select(.name| test(".*so$")).browser_download_url')" -Lo /usr/lib/extest/libextest.so && \
     chmod +x /usr/bin/framework_tool && \
     git clone --depth 1 https://github.com/TamtamHero/fw-fanctrl.git /tmp/fw-fanctrl && \
     pip install --prefix=/usr build && \
@@ -277,7 +323,7 @@ RUN --mount=type=cache,dst=/var/cache \
     --mount=type=bind,from=ctx,source=/,target=/ctx \
     --mount=type=tmpfs,dst=/tmp \
     --mount=type=secret,id=GITHUB_TOKEN \
-    dnf5 -y install \
+    dnf5 --enable-repo=terra-mesa -y install \
         gamescope.x86_64 \
         gamescope-libs.x86_64 \
         gamescope-libs.i686 \
@@ -285,6 +331,8 @@ RUN --mount=type=cache,dst=/var/cache \
         jupiter-sd-mounting-btrfs \
         umu-launcher \
         dbus-x11 \
+        xrandr \
+        evtest \
         xdg-user-dirs \
         xdg-terminal-exec \
         gobject-introspection \
@@ -293,14 +341,20 @@ RUN --mount=type=cache,dst=/var/cache \
         vkBasalt.x86_64 \
         vkBasalt.i686 \
         mangohud.x86_64 \
-        mangohud.i686 && \
-    dnf5 -y --setopt=install_weak_deps=False install \
+        mangohud.i686 \
+        libobs_vkcapture.x86_64 \
+        libobs_glcapture.x86_64 \
+        libobs_vkcapture.i686 \
+        libobs_glcapture.i686 \
+        openxr && \
+    dnf5 -y --enable-repo=terra-mesa --setopt=install_weak_deps=False install \
         steam \
         lutris && \
     dnf5 -y remove \
         gamemode && \
     /ctx/ghcurl "https://raw.githubusercontent.com/Winetricks/winetricks/master/src/winetricks" -Lo /usr/bin/winetricks && \
     chmod +x /usr/bin/winetricks && \
+    setfattr -n user.component -v "winetricks" /usr/bin/winetricks && \
     /ctx/cleanup
 
 # Install ujust-picker from GitHub releases
@@ -311,6 +365,7 @@ RUN --mount=type=cache,dst=/var/cache \
     --mount=type=secret,id=GITHUB_TOKEN \
     /ctx/ghcurl "$(/ctx/ghcurl "https://api.github.com/repos/ublue-os/bazzite-ujust-picker/releases/latest" -s | jq -r '.assets[] | select(.name | test("x86_64$")) | .browser_download_url')" -sL -o /usr/bin/ujust-picker && \
     chmod +x /usr/bin/ujust-picker && \
+    setfattr -n user.component -v "ujust-picker" /usr/bin/ujust-picker && \
     /ctx/cleanup
 
 # Configure KDE & GNOME
@@ -335,13 +390,36 @@ RUN --mount=type=cache,dst=/var/cache \
             kio-extras \
             krunner-bazaar \
             falkon \
+            krdc \
+            tesseract-langpack-spa \
+            tesseract-langpack-deu \
+            tesseract-langpack-jpn \
+            tesseract-langpack-jpn_vert \
+            tesseract-langpack-fra \
+            tesseract-langpack-por \
+            tesseract-langpack-rus \
+            tesseract-langpack-ita \
+            tesseract-langpack-nld \
+            tesseract-langpack-pol \
+            tesseract-langpack-tur \
+            tesseract-langpack-chi_sim \
+            tesseract-langpack-chi_sim_vert \
+            tesseract-langpack-ces \
+            tesseract-langpack-ell \
             ptyxis && \
+        dnf5 -y remove \
+            plasma-drkonqi \
+            plasma-welcome \
+            plasma-welcome-fedora \
+            plasma-discover-kns \
+            kcharselect \
+            kde-partitionmanager \
+            plasma-discover && \
+        sed -i '$r /usr/share/plasma/shells/org.kde.plasma.desktop/contents/updates/bazzite-pins.js' /usr/share/plasma/layout-templates/org.kde.plasma.desktop.defaultPanel/contents/layout.js && \
         sed -i '/<entry name="launchers" type="StringList">/,/<\/entry>/ s/<default>[^<]*<\/default>/<default>preferred:\/\/browser,applications:com.vivaldi.Vivaldi.desktop,applications:md.obsidian.Obsidian.desktop,applications:org.zotero.Zotero.desktop,applications:org.zulip.Zulip.desktop,applications:org.gnome.Ptyxis.desktop,applications:io.github.kolunmi.Bazaar.desktop,preferred:\/\/filemanager<\/default>/' /usr/share/plasma/plasmoids/org.kde.plasma.taskmanager/contents/config/main.xml && \
         sed -i 's@\[Desktop Action new-window\]@\[Desktop Action new-window\]\nX-KDE-Shortcuts=Ctrl+Alt+T@g' /usr/share/applications/org.gnome.Ptyxis.desktop && \
         sed -i '/^Comment/d' /usr/share/applications/org.gnome.Ptyxis.desktop && \
         sed -i 's@Exec=ptyxis@Exec=kde-ptyxis@g' /usr/share/applications/org.gnome.Ptyxis.desktop && \
-        sed -i 's@Keywords=@Keywords=konsole;console;@g' /usr/share/applications/org.gnome.Ptyxis.desktop && \
-        cp /usr/share/applications/org.gnome.Ptyxis.desktop /usr/share/kglobalaccel/org.gnome.Ptyxis.desktop && \
         ln -sf /usr/share/wallpapers/convergence.jxl /usr/share/backgrounds/default.jxl && \
         ln -sf /usr/share/wallpapers/convergence.jxl /usr/share/backgrounds/default-dark.jxl && \
         rm -f /usr/share/backgrounds/default.xml && \
@@ -366,7 +444,7 @@ RUN --mount=type=cache,dst=/var/cache \
             gnome-randr-rust \
             gnome-shell-extension-user-theme \
             gnome-shell-extension-gsconnect \
-            rom-properties-gtk3 \
+            rom-properties-gtk4 \
             ibus-mozc \
             openssh-askpass \
             firewall-config && \
@@ -383,6 +461,7 @@ RUN --mount=type=cache,dst=/var/cache \
             gnome-shell-extension-places-menu \
             gnome-shell-extension-window-list && \
         /ctx/ghcurl "https://raw.githubusercontent.com/jlu5/icoextract/master/exe-thumbnailer.thumbnailer" -Lo /usr/share/thumbnailers/exe-thumbnailer.thumbnailer && \
+        setfattr -n user.component -v "exe-thumbnailer" /usr/share/thumbnailers/exe-thumbnailer.thumbnailer && \
         /ctx/build-gnome-extensions && \
         systemctl enable dconf-update.service \
     ; fi && \
@@ -430,6 +509,7 @@ RUN --mount=type=cache,dst=/var/cache \
     echo "import \"/usr/share/ublue-os/just/82-bazzite-sunshine.just\"" >> /usr/share/ublue-os/justfile && \
     echo "import \"/usr/share/ublue-os/just/82-bazzite-waydroid.just\"" >> /usr/share/ublue-os/justfile && \
     echo "import \"/usr/share/ublue-os/just/83-bazzite-audio.just\"" >> /usr/share/ublue-os/justfile && \
+    echo "import \"/usr/share/ublue-os/just/85-bazzite-image.just\"" >> /usr/share/ublue-os/justfile && \
     echo "import \"/usr/share/ublue-os/just/84-bazzite-virt.just\"" >> /usr/share/ublue-os/justfile && \
     echo "import \"/usr/share/ublue-os/just/86-bazzite-windows.just\"" >> /usr/share/ublue-os/justfile && \
     echo "import \"/usr/share/ublue-os/just/87-bazzite-framegen.just\"" >> /usr/share/ublue-os/justfile && \
@@ -440,27 +520,22 @@ RUN --mount=type=cache,dst=/var/cache \
     echo "import \"/usr/share/ublue-os/just/91-bazzite-decky.just\"" >> /usr/share/ublue-os/justfile && \
     echo "import \"/usr/share/ublue-os/just/92-bazzite-verify.just\"" >> /usr/share/ublue-os/justfile && \
     if grep -q "kinoite" <<< "${BASE_IMAGE_NAME}"; then \
-      systemctl enable usr-share-sddm-themes.mount && \
-      mkdir -p "/usr/share/ublue-os/dconfs/desktop-kinoite/" && \
-      cp "/usr/share/glib-2.0/schemas/zz0-"*"-bazzite-desktop-kinoite-"*".gschema.override" "/usr/share/ublue-os/dconfs/desktop-kinoite/" && \
-      find "/etc/dconf/db/distro.d/" -maxdepth 1 -type f -exec cp {} "/usr/share/ublue-os/dconfs/desktop-kinoite/" \; && \
-      dconf-override-converter to-dconf "/usr/share/ublue-os/dconfs/desktop-kinoite/zz0-"*"-bazzite-desktop-kinoite-"*".gschema.override" && \
-      rm "/usr/share/ublue-os/dconfs/desktop-kinoite/zz0-"*"-bazzite-desktop-kinoite-"*".gschema.override" && \
-      sed -i 's@Exec=/usr/bin/ptyxis@Exec=/usr/bin/kde-ptyxis@g' /usr/share/dbus-1/services/org.gnome.Ptyxis.service \
+        systemctl enable usr-share-sddm-themes.mount && \
+        sed -i 's@Exec=/usr/bin/ptyxis@Exec=/usr/bin/kde-ptyxis@g' /usr/share/dbus-1/services/org.gnome.Ptyxis.service \
     ; else \
-      mkdir -p "/usr/share/ublue-os/dconfs/desktop-silverblue/" && \
-      cp "/usr/share/glib-2.0/schemas/zz0-"*"-bazzite-desktop-silverblue-"*".gschema.override" "/usr/share/ublue-os/dconfs/desktop-silverblue/" && \
-      find "/etc/dconf/db/distro.d/" -maxdepth 1 -type f -exec cp {} "/usr/share/ublue-os/dconfs/desktop-silverblue/" \; && \
-      dconf-override-converter to-dconf "/usr/share/ublue-os/dconfs/desktop-silverblue/zz0-"*"-bazzite-desktop-silverblue-"*".gschema.override" && \
-      sed -i 's/\[org.gtk.Settings.FileChooser\]/\[org\/gtk\/settings\/file-chooser\]/g; s/\[org.gtk.gtk4.Settings.FileChooser\]/\[org\/gtk\/gtk4\/settings\/file-chooser\]/g' "/usr/share/ublue-os/dconfs/desktop-silverblue/zz0-00-bazzite-desktop-silverblue-global" && \
-      rm "/usr/share/ublue-os/dconfs/desktop-silverblue/zz0-"*"-bazzite-desktop-silverblue-"*".gschema.override" \
+        mkdir -p "/usr/share/ublue-os/dconfs/desktop-silverblue/" && \
+        cp "/usr/share/glib-2.0/schemas/zz0-"*"-bazzite-desktop-silverblue-"*".gschema.override" "/usr/share/ublue-os/dconfs/desktop-silverblue/" && \
+        find "/etc/dconf/db/distro.d/" -maxdepth 1 -type f -exec cp {} "/usr/share/ublue-os/dconfs/desktop-silverblue/" \; && \
+        dconf-override-converter to-dconf "/usr/share/ublue-os/dconfs/desktop-silverblue/zz0-"*"-bazzite-desktop-silverblue-"*".gschema.override" && \
+        sed -i 's/\[org.gtk.Settings.FileChooser\]/\[org\/gtk\/settings\/file-chooser\]/g; s/\[org.gtk.gtk4.Settings.FileChooser\]/\[org\/gtk\/gtk4\/settings\/file-chooser\]/g' "/usr/share/ublue-os/dconfs/desktop-silverblue/zz0-00-bazzite-desktop-silverblue-global" && \
+        rm "/usr/share/ublue-os/dconfs/desktop-silverblue/zz0-"*"-bazzite-desktop-silverblue-"*".gschema.override" && \
+        mkdir -p /tmp/bazzite-schema-test && \
+        find "/usr/share/glib-2.0/schemas/" -type f ! -name "*.gschema.override" -exec cp {} "/tmp/bazzite-schema-test/" \; && \
+        cp "/usr/share/glib-2.0/schemas/zz0-"*".gschema.override" "/tmp/bazzite-schema-test/" && \
+        glib-compile-schemas --strict /tmp/bazzite-schema-test && \
+        glib-compile-schemas /usr/share/glib-2.0/schemas &>/dev/null && \
+        rm -r /tmp/bazzite-schema-test \
     ; fi && \
-    mkdir -p /tmp/bazzite-schema-test && \
-    find "/usr/share/glib-2.0/schemas/" -type f ! -name "*.gschema.override" -exec cp {} "/tmp/bazzite-schema-test/" \; && \
-    cp "/usr/share/glib-2.0/schemas/zz0-"*".gschema.override" "/tmp/bazzite-schema-test/" && \
-    glib-compile-schemas --strict /tmp/bazzite-schema-test && \
-    glib-compile-schemas /usr/share/glib-2.0/schemas &>/dev/null && \
-    rm -r /tmp/bazzite-schema-test && \
     sed -i 's/stage/none/g' /etc/rpm-ostreed.conf && \
     for repo in \
         fedora-cisco-openh264 \
@@ -479,7 +554,6 @@ RUN --mount=type=cache,dst=/var/cache \
         ublue-os/staging \
         ublue-os/packages \
         ycollet/audinux \
-        ublue-os/rom-properties \
         ublue-os/hhd \
         lizardbyte/beta \
         che/nerd-fonts; \
@@ -514,7 +588,6 @@ RUN --mount=type=cache,dst=/var/cache \
     systemctl --global enable podman.socket && \
     systemctl --global enable systemd-tmpfiles-setup.service && \
     systemctl --global disable sunshine.service && \
-    systemctl --global disable sunshine-kms.service && \
     systemctl disable waydroid-container.service && \
     systemctl enable greenboot-healthcheck.service && \
     systemctl enable greenboot-set-rollback-trigger.service && \
@@ -527,8 +600,11 @@ RUN --mount=type=cache,dst=/var/cache \
     chmod +x /usr/bin/waydroid-choose-gpu && \
     dnf5 config-manager setopt skip_if_unavailable=1 && \
     /ctx/ghcurl "https://github.com/ublue-os/toolboxes/raw/refs/heads/main/apps/docker/distrobox.ini" -Lo /etc/distrobox/docker.ini && \
+    setfattr -n user.component -v "toolbox-config" /etc/distrobox/docker.ini && \
     /ctx/ghcurl "https://github.com/ublue-os/toolboxes/raw/refs/heads/main/apps/incus/distrobox.ini" -Lo /etc/distrobox/incus.ini && \
+    setfattr -n user.component -v "toolbox-config" /etc/distrobox/incus.ini && \
     /ctx/ghcurl "https://raw.githubusercontent.com/ublue-os/bash-preexec/master/bash-preexec.sh" -Lo /usr/share/bash-prexec && \
+    setfattr -n user.component -v "bash-preexec" /usr/share/bash-prexec && \
     dnf5 -y install checkpolicy && \
     for te_file in /usr/share/cordierite/selinux/*.te; do \
         mod_name=$(basename "$te_file" .te); \
@@ -628,6 +704,7 @@ RUN --mount=type=cache,dst=/var/cache \
         --depth 1 \
         /tmp/jupiter-dock-updater-bin && \
     mv -v /tmp/jupiter-dock-updater-bin/packaged/usr/lib/jupiter-dock-updater /usr/libexec/jupiter-dock-updater && \
+    setfattr -n user.component -v "jupiter-dock-updater" /usr/libexec/jupiter-dock-updater/* && \
     ln -s /usr/bin/steamos-logger /usr/bin/steamos-info && \
     ln -s /usr/bin/steamos-logger /usr/bin/steamos-notice && \
     ln -s /usr/bin/steamos-logger /usr/bin/steamos-warning && \
@@ -656,8 +733,10 @@ RUN --mount=type=cache,dst=/var/cache \
     --mount=type=secret,id=GITHUB_TOKEN \
     mkdir -p /usr/share/gamescope-session-plus/ && \
     curl --retry 3 -Lo /usr/share/gamescope-session-plus/bootstrap_steam.tar.gz https://large-package-sources.nobaraproject.org/bootstrap_steam.tar.gz && \
+    setfattr -n user.component -v "bootstrap_steam" /usr/share/gamescope-session-plus/bootstrap_steam.tar.gz && \
     mkdir -p /usr/share/sdl/ && \
     /ctx/ghcurl "https://raw.githubusercontent.com/mdqinc/SDL_GameControllerDB/refs/heads/master/gamecontrollerdb.txt" -Lo /usr/share/sdl/gamecontrollerdb.txt && \
+    setfattr -n user.component -v "sdl2" /usr/share/sdl/gamecontrollerdb.txt && \
     dnf5 -y install \
     --repo copr:copr.fedorainfracloud.org:ublue-os:bazzite \
         gamescope-session-plus \
@@ -673,9 +752,7 @@ RUN --mount=type=cache,dst=/var/cache \
     mv "/etc/skel/.config/autostart/steam.desktop" "/etc/xdg/autostart/steam.desktop" && \
     sed -i 's@Exec=waydroid first-launch@Exec=/usr/bin/waydroid-launcher first-launch\nX-Steam-Library-Capsule=/usr/share/applications/Waydroid/capsule.png\nX-Steam-Library-Hero=/usr/share/applications/Waydroid/hero.png\nX-Steam-Library-Logo=/usr/share/applications/Waydroid/logo.png\nX-Steam-Library-StoreCapsule=/usr/share/applications/Waydroid/store-logo.png\nX-Steam-Controller-Template=Desktop@g' /usr/share/applications/Waydroid.desktop && \
     if grep -q "kinoite" <<< "${BASE_IMAGE_NAME}"; then \
-        sed -i 's/Exec=.*/Exec=systemctl start return-to-gamemode.service/' /etc/skel/Desktop/Return.desktop && \
-        mkdir -p /usr/share/ublue-os/backup && \
-        mv /usr/share/applications/com.github.maliit.keyboard.desktop /usr/share/ublue-os/backup/com.github.maliit.keyboard.desktop \
+        sed -i 's/Exec=.*/Exec=systemctl start return-to-gamemode.service/' /etc/skel/Desktop/Return.desktop \
     ; fi && \
     sed -i 's@\[Desktop Entry\]@\[Desktop Entry\]\nNoDisplay=true@g' /usr/share/applications/input-remapper-gtk.desktop && \
     for copr in \
@@ -694,12 +771,6 @@ RUN --mount=type=cache,dst=/var/cache \
     ; else \
         systemctl disable usr-share-sddm-themes.mount \
     ; fi && \
-    mkdir -p /tmp/bazzite-schema-test && \
-    find "/usr/share/glib-2.0/schemas/" -type f ! -name "*.gschema.override" -exec cp {} "/tmp/bazzite-schema-test/" \; && \
-    cp "/usr/share/glib-2.0/schemas/zz0-"*".gschema.override" "/tmp/bazzite-schema-test/" && \
-    glib-compile-schemas --strict /tmp/bazzite-schema-test && \
-    glib-compile-schemas /usr/share/glib-2.0/schemas &>/dev/null && \
-    rm -r /tmp/bazzite-schema-test && \
     { rm -v /usr/share/applications/bazzite-steam-bpm.desktop || true; } && \
     systemctl enable hhd.service && \
     systemctl enable --global steamos-manager.service && \
@@ -780,17 +851,11 @@ RUN --mount=type=cache,dst=/var/cache \
     --mount=type=tmpfs,dst=/tmp \
     echo "import \"/usr/share/ublue-os/just/95-bazzite-nvidia.just\"" >> /usr/share/ublue-os/justfile && \
     if grep -q "silverblue" <<< "${BASE_IMAGE_NAME}"; then \
-      mkdir -p "/usr/share/ublue-os/dconfs/nvidia-silverblue/" && \
-      cp "/usr/share/glib-2.0/schemas/zz0-"*"-bazzite-nvidia-silverblue-"*".gschema.override" "/usr/share/ublue-os/dconfs/nvidia-silverblue/" && \
-      dconf-override-converter to-dconf "/usr/share/ublue-os/dconfs/nvidia-silverblue/zz0-"*"-bazzite-nvidia-silverblue-"*".gschema.override" && \
-      rm "/usr/share/ublue-os/dconfs/nvidia-silverblue/zz0-"*"-bazzite-nvidia-silverblue-"*".gschema.override" \
+        mkdir -p "/usr/share/ublue-os/dconfs/nvidia-silverblue/" && \
+        cp "/usr/share/glib-2.0/schemas/zz0-"*"-bazzite-nvidia-silverblue-"*".gschema.override" "/usr/share/ublue-os/dconfs/nvidia-silverblue/" && \
+        dconf-override-converter to-dconf "/usr/share/ublue-os/dconfs/nvidia-silverblue/zz0-"*"-bazzite-nvidia-silverblue-"*".gschema.override" && \
+        rm "/usr/share/ublue-os/dconfs/nvidia-silverblue/zz0-"*"-bazzite-nvidia-silverblue-"*".gschema.override" \
     ; fi && \
-    mkdir -p /tmp/bazzite-schema-test && \
-    find "/usr/share/glib-2.0/schemas/" -type f ! -name "*.gschema.override" -exec cp {} "/tmp/bazzite-schema-test/" \; && \
-    cp "/usr/share/glib-2.0/schemas/zz0-"*".gschema.override" "/tmp/bazzite-schema-test/" && \
-    glib-compile-schemas --strict /tmp/bazzite-schema-test && \
-    glib-compile-schemas /usr/share/glib-2.0/schemas &>/dev/null && \
-    rm -r /tmp/bazzite-schema-test && \
     systemctl disable supergfxd.service && \
     dnf5 config-manager setopt skip_if_unavailable=1 && \
     /ctx/image-info && \

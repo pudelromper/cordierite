@@ -2,15 +2,18 @@ on:
   workflow_call:
   workflow_dispatch:
     inputs:
-      notes:
-        description: 'Release notes (optional)'
-permissions:
-  contents: write
+      handwritten:
+        description: 'Small changelog about changes in this build:'
+      target:
+        description: 'Release Branch (e.g., testing). Defaults to branch name.'
+permissions: {}
 
 name: Generate Release
 jobs:
   generate-release:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
     steps:
       - name: Checkout last 500 commits (for <commits> to work)
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
@@ -51,14 +54,14 @@ jobs:
           echo "number=${NEXT}" >> $GITHUB_OUTPUT
 
       - name: Create Release
-        uses: softprops/action-gh-release@a06a81a03ee405af7f2048a818ed3f03bbf83c7b # v2
+        uses: softprops/action-gh-release@153bb8e04406b158c6c84fc1615b65b24149a1fe # v2
         with:
           name: ${{ steps.generate-release.outputs.title }}
           tag_name: ${{ steps.generate-release.outputs.tag }}
           body: |
             ## Cordierite Release ${{ steps.generate-release.outputs.number }}
 
-            ${{ github.event.inputs.notes || 'Automated release from CI build.' }}
+            ${{ github.event.inputs.handwritten || 'Automated release from CI build.' }}
 
             ### Download ISOs
             ISOs will be uploaded to Backblaze B2 after the build completes.

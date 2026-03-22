@@ -8,8 +8,7 @@ concurrency:
   group: ${{ github.workflow }}
   cancel-in-progress: true
 
-permissions:
-  packages: write
+permissions: {}
 
 on:
   workflow_dispatch:
@@ -36,6 +35,8 @@ jobs:
     runs-on: ubuntu-latest
     if: inputs.old_tag != ''
     needs: [safeguard-timer]
+    permissions:
+      packages: write
     steps:
       - uses: Zeglius/ghcr-oci-retagger@1e08f1dac27d25efe1377d9a35f133731bf3d986
         env:
@@ -54,7 +55,8 @@ jobs:
             bazzite-gnome-nvidia-open:${{ inputs.old_tag }}         => bazzite-gnome-nvidia-open:latest,stable,${{ env.ver }}
             cordierite-nvidia:${{ inputs.old_tag }}                 => cordierite-nvidia:latest,stable,${{ env.ver }}
             cordierite-nvidia-open:${{ inputs.old_tag }}            => cordierite-nvidia-open:latest,stable,${{ env.ver }}
-
+            bazzite-nvidia:${{ inputs.old_tag }}                    => bazzite-nvidia:latest,stable,${{ env.ver }}
+            bazzite-nvidia-open:${{ inputs.old_tag }}               => bazzite-nvidia-open:latest,stable,${{ env.ver }}
             cordierite-asus-nvidia-open:${{ inputs.old_tag }}       => cordierite-asus-nvidia-open:latest,stable,${{ env.ver }}
             cordierite-asus-nvidia:${{ inputs.old_tag }}            => cordierite-asus-nvidia:latest,stable,${{ env.ver }}
             bazzite-gnome-asus-nvidia-open:${{ inputs.old_tag }}    => bazzite-gnome-asus-nvidia-open:latest,stable,${{ env.ver }}

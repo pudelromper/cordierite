@@ -202,6 +202,65 @@ configure-grub ACTION="":
       apply_setting "$OPTION"
     fi
 
+# Toogle a ramoops config to save panic messages across crashes
+[group("system")]
+toggle-save-panics ACTION="":
+    #!/usr/bin/bash
+    source /usr/lib/ujust/ujust.sh
+
+    if [[ -e /etc/modules-load.d/ramoops.conf ]]; then
+        STATUS=Enabled
+    else
+        STATUS=Disabled
+    fi
+
+    OPTION="{{ ACTION }}"
+    if [ "$OPTION" == "help" ]; then
+      echo "Usage: ujust toggle-save-panics <option>"
+      echo "  <option>: Specify the option to skip the interactive prompt"
+      echo "  Use 'enable' to enable ramoops"
+      echo "  Use 'disable' to disable ramoops"
+      exit 0
+    elif [ "$OPTION" == "" ]; then
+      echo Ramoops is a kernel module that will save panic information across a reboot and allow it to be
+      echo recovered for debugging.  Panic messages will be written to /var/lib/systemd/pstore.
+      echo
+      if [ "$STATUS" == "Enabled" ]; then
+        echo -e "${bold}ramoops configuration:${normal} ${green}$STATUS${normal}\n"
+      else
+        echo -e "${bold}ramoops configuration:${normal} ${yellow}$STATUS${normal}\n"
+      fi
+
+      OPTION=$(ugum choose "Enable ramoops" "Disable ramoops" "Exit without saving")
+    fi
+
+    case "$OPTION" in
+      "Enable ramoops"|enable)
+        echo "Enabling ramoops..."
+        echo
+        echo "kernel.panic = 5" | sudo tee /etc/sysctl.d/99-panic.conf > /dev/null
+        echo "options ramoops mem_name=ramoops mem_size=0x10000 record_size=0x4000" | \
+          sudo tee /etc/modprobe.d/ramoops.conf > /dev/null
+        echo "ramoops" | sudo tee /etc/modules-load.d/ramoops.conf > /dev/null
+        sudo rpm-ostree kargs \
+          --append-if-missing="reserve_mem=64K:4096:ramoops" \
+          --append-if-missing="pstore.backend=ramoops"
+        ;;
+      "Disable ramoops"|disable)
+        echo "Disabling ramoops..."
+        echo
+        sudo rm -f /etc/sysctl.d/99-panic.conf
+        sudo rm -f /etc/modprobe.d/ramoops.conf
+        sudo rm -f /etc/modules-load.d/ramoops.conf
+        sudo rpm-ostree kargs \
+          --delete-if-present="reserve_mem=64K:4096:ramoops" \
+          --delete-if-present="pstore.backend=ramoops"
+        ;;
+      "Exit without saving"|*)
+        echo "No changes made."
+        ;;
+    esac
+
 # Add user to "input" group required by certain controller drivers
 [group("hardware")]
 add-user-to-input-group:
@@ -317,24 +376,6 @@ configure-watchdog ACTION="":
         WATCHDOG_KARGS="$WATCHDOG_KARGS --append-if-missing=modprobe.blacklist=sp5100_tco"
       fi
       rpm-ostree kargs $WATCHDOG_KARGS
-    fi
-
-# Ptyxis terminal transparency
-[group("utilities")]
-ptyxis-transparency opacity="0.95":
-    #!/usr/bin/bash
-    set -euxo pipefail
-    if [[ -n "$(echo "{{ opacity }}" | grep -v '^[.0-9]*$')" ]]; then
-      printf "Value must be numeric: %s.\n" "{{ opacity }}"
-    elif [[ $(echo "0<{{ opacity }} && 1>={{ opacity }}" | bc -q) -eq 1 ]]; then
-      raw="$(gsettings get org.gnome.Ptyxis profile-uuids)"
-      uuids="$(sed -En 's|[^0-9a-z]*||g; s|([0-9a-z]{32})|\1\n|gp' <<<${raw})"
-      for i in ${uuids}; do
-        location="org.gnome.Ptyxis.Profile:/org/gnome/Ptyxis/Profiles/${i}/"
-        gsettings set "${location}" opacity "{{ opacity }}"; done
-      printf "Ptyxis opacity is now %s.\n" "{{ opacity }}"
-    else
-      printf "Value must be between 0 and 1: %s.\n" "{{ opacity }}"
     fi
 
 # Configure snapshotting for /var/home
