@@ -1,8 +1,8 @@
 export project_root := `git rev-parse --show-toplevel`
 export git_branch := ` git branch --show-current`
-export latest := "43"
+export latest := "44"
 export default_image := "kinoite"
-export default_target := "bazzite"
+export default_target := "cordierite"
 
 alias build-iso := build-iso-release
 alias run := run-container
@@ -66,3 +66,15 @@ clean-images:
 # Clean ISOs
 clean-isos:
     @{{ project_root }}/just_scripts/cleanup-dir.sh
+
+# Build, rechunk, push and sign release images locally (see local_build/README.md)
+release-images *images:
+    @{{ project_root }}/local_build/build-images.sh {{ images }}
+
+# Build, sign and upload live ISOs locally from published images (needs root)
+release-isos *images:
+    @{{ project_root }}/local_build/build-iso.sh {{ images }}
+
+# Fetch and merge upstream ublue-os/bazzite main
+sync-upstream:
+    @{{ project_root }}/local_build/sync-upstream.sh

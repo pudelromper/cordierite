@@ -24,6 +24,7 @@ FROM ${BASE_IMAGE} AS cordierite
 
 ARG IMAGE_NAME="${IMAGE_NAME:-cordierite}"
 ARG IMAGE_VENDOR="${IMAGE_VENDOR:-ublue-os}"
+ARG IMAGE_REGISTRY="${IMAGE_REGISTRY:-ghcr.io}"
 ARG IMAGE_BRANCH="${IMAGE_BRANCH:-stable}"
 ARG BASE_IMAGE_NAME="${BASE_IMAGE_NAME:-kinoite}"
 ARG FEDORA_VERSION="${FEDORA_VERSION:-44}"
@@ -392,6 +393,7 @@ RUN --mount=type=cache,dst=/var/cache \
     --mount=type=cache,dst=/var/log \
     --mount=type=bind,from=ctx,source=/,target=/ctx \
     --mount=type=tmpfs,dst=/tmp \
+    --mount=type=bind,src=cosign.pub,dst=/ctx-signing/cosign.pub \
     --mount=type=secret,id=GITHUB_TOKEN \
     rm -f /etc/profile.d/toolbox.sh && \
     mkdir -p /var/tmp && chmod 1777 /var/tmp && \
@@ -513,6 +515,7 @@ RUN --mount=type=cache,dst=/var/cache \
     setfattr -n user.component -v "toolbox-config" /etc/distrobox/incus.ini && \
     /ctx/ghcurl "https://raw.githubusercontent.com/ublue-os/bash-preexec/master/bash-preexec.sh" -Lo /usr/share/bash-prexec && \
     setfattr -n user.component -v "bash-preexec" /usr/share/bash-prexec && \
+    /ctx/install-signing && \
     dnf5 -y install checkpolicy && \
     for te_file in /usr/share/cordierite/selinux/*.te; do \
         mod_name=$(basename "$te_file" .te); \
@@ -535,6 +538,7 @@ FROM cordierite AS cordierite-deck
 
 ARG IMAGE_NAME="${IMAGE_NAME:-cordierite-deck}"
 ARG IMAGE_VENDOR="${IMAGE_VENDOR:-ublue-os}"
+ARG IMAGE_REGISTRY="${IMAGE_REGISTRY:-ghcr.io}"
 ARG IMAGE_BRANCH="${IMAGE_BRANCH:-stable}"
 ARG BASE_IMAGE_NAME="${BASE_IMAGE_NAME:-kinoite}"
 ARG VERSION_TAG="${VERSION_TAG}"
@@ -738,6 +742,7 @@ FROM ${NVIDIA_BASE} AS cordierite-nvidia
 
 ARG IMAGE_NAME="${IMAGE_NAME:-cordierite-nvidia}"
 ARG IMAGE_VENDOR="${IMAGE_VENDOR:-ublue-os}"
+ARG IMAGE_REGISTRY="${IMAGE_REGISTRY:-ghcr.io}"
 ARG IMAGE_BRANCH="${IMAGE_BRANCH:-stable}"
 ARG BASE_IMAGE_NAME="${BASE_IMAGE_NAME:-kinoite}"
 ARG NVIDIA_FLAVOR="${NVIDIA_FLAVOR:-nvidia-open}"

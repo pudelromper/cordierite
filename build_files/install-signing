@@ -1,0 +1,31 @@
+#!/usr/bin/bash
+# Ship the Cordierite image-signing key and a containers-policy entry, so an
+# image reference of the form
+#   ostree-image-signed:docker://${IMAGE_REGISTRY}/${IMAGE_VENDOR}/<image>
+# is actually verified against cosign.pub at update and rebase time.
+# The base image's policy only knows ghcr.io/ublue-os and accepts everything
+# else unverified.
+
+set -eoux pipefail
+
+KEY_SRC="/ctx-signing/cosign.pub"
+KEY_DST="/etc/pki/containers/cordierite.pub"
+SCOPE="${IMAGE_REGISTRY}/${IMAGE_VENDOR}"
+POLICY="/etc/containers/policy.json"
+
+mkdir -p /etc/pki/containers /etc/containers/registries.d
+install -m 0644 "${KEY_SRC}" "${KEY_DST}"
+
+if [ ! -f "${POLICY}" ]; then
+  printf '{"default":[{"type":"reject"}],"transports":{"docker":{"":[{"type":"insecureAcceptAnything"}]}}}\n' > "${POLICY}"
+fi
+jq --arg scope "${SCOPE}" --arg key "${KEY_DST}" \
+  '.transports.docker[$scope] = [{"type":"sigstoreSigned","keyPath":$key,"signedIdentity":{"type":"matchRepository"}}]' \
+  "${POLICY}" > "${POLICY}.tmp"
+mv -f "${POLICY}.tmp" "${POLICY}"
+
+cat > /etc/containers/registries.d/cordierite.yaml <<REGISTRY
+docker:
+  ${SCOPE}:
+    use-sigstore-attachments: true
+REGISTRY

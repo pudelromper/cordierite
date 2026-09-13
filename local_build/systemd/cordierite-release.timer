@@ -1,0 +1,11 @@
+[Unit]
+Description=Weekly Cordierite release build
+
+[Timer]
+# Same slot as the old GitHub schedule (Monday 04:40 UTC), in local time.
+OnCalendar=Mon *-*-* 04:40:00
+RandomizedDelaySec=15min
+Persistent=true
+
+[Install]
+WantedBy=timers.target
