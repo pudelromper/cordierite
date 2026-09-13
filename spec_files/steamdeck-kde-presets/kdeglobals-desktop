@@ -7,8 +7,6 @@ kcm_updates=false
 
 [General]
 ColorScheme=Cordierite
-TerminalApplication=kde-ptyxis
-TerminalService=org.gnome.Ptyxis.desktop
 fixed=Fira Code,10,-1,5,50,0,0,0,0,0
 font=Noto Sans,10,-1,5,50,0,0,0,0,0
 menuFont=Noto Sans,10,-1,5,50,0,0,0,0,0

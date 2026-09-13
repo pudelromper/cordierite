@@ -1,6 +1,6 @@
 %define packagename steamdeck-kde-presets
-%define packagever 0.23
-%global _default_patch_fuzz 2
+%define packagever 0.30
+%global _default_patch_fuzz 1
 
 Name:           steamdeck-kde-presets-desktop
 Version:        {{{ git_dir_version }}}
@@ -13,19 +13,18 @@ Source0:        https://gitlab.com/evlaV/%{packagename}/-/archive/%{packagever}/
 Source1:        kdeglobals-desktop
 Source2:        steamdeck-le.svg
 Source3:        cordierite_logo.svgz
-Source4:        metadata_vapor.json
-Source5:        metadata_vgui2.json
-Source6:        plasmarc
-Source7:        plasma-org.kde.plasma.desktop-appletsrc
-Source8:        Cordierite.colors
-Source9:        look-and-feel/com.cordierite.desktop/metadata.json
-Source10:       look-and-feel/com.cordierite.desktop/contents/defaults
-Source11:       look-and-feel/com.cordierite.desktop/contents/splash/Splash.qml
+Source4:        plasmarc
+Source5:        kscreenlockerrc
+Source6:        plasma-org.kde.plasma.desktop-appletsrc
+Source7:        Cordierite.colors
+Source8:        look-and-feel/com.cordierite.desktop/metadata.json
+Source9:        look-and-feel/com.cordierite.desktop/contents/defaults
+Source10:       look-and-feel/com.cordierite.desktop/contents/splash/Splash.qml
 Patch0:         multiuser.patch
-Patch1:         lockscreen.patch
-Patch2:         cordierite_logo.patch
-Patch3:         ublue.patch
-Patch4:         splash.patch
+Patch1:         cordierite_logo.patch
+Patch2:         ublue.patch
+Patch3:         splash.patch
+Patch4:         vapor-metadata.patch
 
 BuildArch:      noarch
 
@@ -55,44 +54,47 @@ cp -rv etc/* %{buildroot}%{_sysconfdir}
 cp usr/bin/steamos-add-to-steam %{buildroot}%{_bindir}/steamos-add-to-steam
 mv %{buildroot}%{_datadir}/icons/hicolor/scalable/places/distributor-logo-steamdeck.svg %{buildroot}%{_datadir}/icons/hicolor/scalable/places/steamdeck.svg
 cp %{SOURCE2} %{buildroot}%{_datadir}/icons/hicolor/scalable/places/steamdeck-le.svg
-cp %{SOURCE6} %{buildroot}%{_datadir}/plasma/desktoptheme/Vapor/plasmarc
+cp %{SOURCE4} %{buildroot}%{_datadir}/plasma/desktoptheme/Vapor/plasmarc
+rm -rf %{buildroot}%{_datadir}/plasma/look-and-feel/com.valve.vapor.desktop
+mv %{buildroot}%{_datadir}/plasma/look-and-feel/com.valve.vapor.deck.desktop %{buildroot}%{_datadir}/plasma/look-and-feel/com.valve.vapor.desktop
 # Remove unneeded files
-rm -rf %{buildroot}%{_datadir}/applications/steam/steamos-nested-desktop
+rm %{buildroot}%{_sysconfdir}/xdg/autostart/defaultbrightness.desktop
+rm %{buildroot}%{_sysconfdir}/xdg/autostart/setup-kwallet.desktop
+rm %{buildroot}%{_datadir}/applications/steam/steamos-nested-desktop
 rm %{buildroot}%{_datadir}/applications/org.mozilla.firefox.desktop
-rm %{buildroot}%{_datadir}/kservices5/ServiceMenus/steam.desktop
-rm %{buildroot}%{_datadir}/X11/xorg.conf.d/99-pointer.conf
+rm %{buildroot}%{_datadir}/kio/servicemenus/steam.desktop
 rm %{buildroot}%{_datadir}/icons/hicolor/scalable/places/distributor-logo.svg
 rm %{buildroot}%{_sysconfdir}/profile.d/kde.sh
 rm %{buildroot}%{_sysconfdir}/sddm.conf.d/steamdeck.conf
 rm %{buildroot}%{_sysconfdir}/skel/Desktop/Return.desktop
-rm %{buildroot}%{_sysconfdir}/X11/Xsession.d/50rotate-screen
+rm %{buildroot}%{_sysconfdir}/xdg/kded5rc
 rm %{buildroot}%{_sysconfdir}/xdg/autostart/ibus.desktop
 rm %{buildroot}%{_sysconfdir}/xdg/autostart/jupiter-plasma-bootstrap.desktop
 rm %{buildroot}%{_sysconfdir}/xdg/autostart/steam.desktop
 rm %{buildroot}%{_sysconfdir}/xdg/kcminputrc
-rm %{buildroot}%{_sysconfdir}/xdg/kwinrc
 rm %{buildroot}%{_sysconfdir}/xdg/kwinrulesrc
 rm %{buildroot}%{_sysconfdir}/xdg/plasma-nm
 rm %{buildroot}%{_sysconfdir}/xdg/plasma-workspace/env/ibus.sh
-rm %{buildroot}%{_sysconfdir}/xdg/powermanagementprofilesrc
+rm %{buildroot}%{_sysconfdir}/xdg/plasma-workspace/env/set-return-icon.sh
+rm %{buildroot}%{_sysconfdir}/xdg/powerdevilrc
 rm %{buildroot}%{_sysconfdir}/xdg/kscreenlockerrc
 rm %{buildroot}%{_sysconfdir}/xdg/baloofilerc
 rm %{buildroot}%{_sysconfdir}/xdg/kdeglobals
 rm %{buildroot}%{_sysconfdir}/xdg/kcm-about-distrorc
 cp %{SOURCE1} %{buildroot}%{_sysconfdir}/xdg/kdeglobals
-cp %{SOURCE7} %{buildroot}%{_sysconfdir}/xdg/plasma-org.kde.plasma.desktop-appletsrc
+cp %{SOURCE6} %{buildroot}%{_sysconfdir}/xdg/plasma-org.kde.plasma.desktop-appletsrc
 rm %{buildroot}%{_datadir}/plasma/look-and-feel/com.valve.vapor.desktop/contents/splash/images/deck_logo.svgz
 rm %{buildroot}%{_datadir}/plasma/look-and-feel/com.valve.vgui.desktop/contents/splash/images/deck_logo.svgz
+rm -rf %{buildroot}%{_datadir}/kwalletd
 cp %{SOURCE3} %{buildroot}%{_datadir}/plasma/look-and-feel/com.valve.vapor.desktop/contents/splash/images/cordierite_logo.svgz
 cp %{SOURCE3} %{buildroot}%{_datadir}/plasma/look-and-feel/com.valve.vgui.desktop/contents/splash/images/cordierite_logo.svgz
-cp %{SOURCE4} %{buildroot}%{_datadir}/plasma/look-and-feel/com.valve.vapor.desktop/metadata.json
-cp %{SOURCE5} %{buildroot}%{_datadir}/plasma/look-and-feel/com.valve.vgui.desktop/metadata.json
-cp %{SOURCE8} %{buildroot}%{_datadir}/color-schemes/Cordierite.colors
+cp %{SOURCE5} %{buildroot}%{_sysconfdir}/xdg/kscreenlockerrc
+cp %{SOURCE7} %{buildroot}%{_datadir}/color-schemes/Cordierite.colors
 # Install Cordierite look-and-feel theme
 mkdir -p %{buildroot}%{_datadir}/plasma/look-and-feel/com.cordierite.desktop/contents/splash/images
-cp %{SOURCE9} %{buildroot}%{_datadir}/plasma/look-and-feel/com.cordierite.desktop/metadata.json
-cp %{SOURCE10} %{buildroot}%{_datadir}/plasma/look-and-feel/com.cordierite.desktop/contents/defaults
-cp %{SOURCE11} %{buildroot}%{_datadir}/plasma/look-and-feel/com.cordierite.desktop/contents/splash/Splash.qml
+cp %{SOURCE8} %{buildroot}%{_datadir}/plasma/look-and-feel/com.cordierite.desktop/metadata.json
+cp %{SOURCE9} %{buildroot}%{_datadir}/plasma/look-and-feel/com.cordierite.desktop/contents/defaults
+cp %{SOURCE10} %{buildroot}%{_datadir}/plasma/look-and-feel/com.cordierite.desktop/contents/splash/Splash.qml
 cp %{SOURCE3} %{buildroot}%{_datadir}/plasma/look-and-feel/com.cordierite.desktop/contents/splash/images/cordierite_logo.svgz
 cp %{buildroot}%{_datadir}/plasma/look-and-feel/com.valve.vapor.desktop/contents/splash/images/busywidget.svgz %{buildroot}%{_datadir}/plasma/look-and-feel/com.cordierite.desktop/contents/splash/images/busywidget.svgz
 
@@ -126,6 +128,7 @@ cp %{buildroot}%{_datadir}/plasma/look-and-feel/com.valve.vapor.desktop/contents
 %{_sysconfdir}/xdg/gtk-3.0/settings.ini
 %{_sysconfdir}/xdg/kdeglobals
 %{_sysconfdir}/xdg/ktrashrc
+%{_sysconfdir}/xdg/kscreenlockerrc
 %{_sysconfdir}/xdg/plasma-org.kde.plasma.desktop-appletsrc
 
 # Finally, changes from the latest release of your application are generated from

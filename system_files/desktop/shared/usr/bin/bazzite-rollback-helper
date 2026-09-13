@@ -156,13 +156,11 @@ rebase_to() {
   local full_ref="$target"
   case "$target" in
     ostree-*) ;;
-    *:*) 
-      local scheme=$(signing_scheme)
-      full_ref="$scheme/ublue-os/$target"
+    *:*)
+      full_ref="ostree-image-signed:docker://ghcr.io/ublue-os/$target"
       ;;
     *)
-      local scheme=$(signing_scheme)
-      full_ref="$scheme/ublue-os/$DEFAULT_IMAGE:$target"
+      full_ref="ostree-image-signed:docker://ghcr.io/ublue-os/$DEFAULT_IMAGE:$target"
       ;;
   esac
   
@@ -253,7 +251,23 @@ list_images() {
 }
 
 current() {
-  rpm-ostree status -vb
+  local pretty_IMAGE
+  local pretty_TAG
+  {
+  read -r pretty_IMAGE
+  read -r pretty_TAG
+  } < <(
+    rpm-ostree status --json | jq -r '
+      .deployments[]
+      | select(.booted)
+      | .["container-image-reference"]
+      | capture(".*/(?<image>[^:]+):(?<tag>[^:]+)$")
+      | .image, .tag
+    '
+  )
+
+  echo -e "IMAGE:\t${b}$pretty_IMAGE${n}"
+  echo -e "TAG:\t${b}$pretty_TAG${n}"
 }
 
 rollback() {
@@ -333,7 +347,7 @@ interactive_menu() {
             local version=$(pick_version "ublue-os" "$img" "${filter,,}")
             [[ "$version" != "Back" && -n "$version" ]] && {
               clear
-              rebase_to "$(signing_scheme)/ublue-os/$img:$version"
+              rebase_to "ostree-image-signed:docker://ghcr.io/ublue-os/$img:$version"
               press_any_key
             }
           fi

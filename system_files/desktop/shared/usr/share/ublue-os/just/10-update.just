@@ -10,10 +10,7 @@ update:
     echo "🐩 Fetching updates... Good boy!"
     echo ""
 
-    # Source brew if we are not in an interactive session
-    [[ $- != *i* ]] && source <(/home/linuxbrew/.linuxbrew/bin/brew shellenv)
-
-    /usr/bin/topgrade --config /usr/share/ublue-os/topgrade.toml --keep
+    /usr/libexec/uupd-update | jq -r -R 'fromjson? | [(.title, .msg, .description) | select(.)] | join(" ")'
 
     echo ""
     echo "🐩 All done! Woof!"
