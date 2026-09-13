@@ -110,8 +110,6 @@ RUN --mount=type=cache,dst=/var/cache \
     dnf5 -y remove \
         pipewire-config-raop \
         mesa-va-drivers && \
-    dnf5 -y config-manager setopt excludepkgs=NetworkManager-openvpn && \
-    rm -f /usr/lib/sysusers.d/nm-openvpn-sysusers.conf && \
     declare -A toswap=( \
         ["copr:copr.fedorainfracloud.org:ublue-os:bazzite"]="wireplumber" \
         ["copr:copr.fedorainfracloud.org:ublue-os:bazzite-multilib"]="bluez xorg-x11-server-Xwayland" \

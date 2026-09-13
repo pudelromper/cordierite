@@ -1360,7 +1360,7 @@ get-logs:
     #!/bin/bash
     set -euo pipefail
     source /usr/lib/ujust/ujust.sh
-    echo -e "${red}${bold}Generating and uploading system information and logs for Bazzite Support...${normal}"
+    echo -e "${red}${bold}Generating and uploading system information and logs for Cordierite support...${normal}"
     echo " "
     # Upload system status information
     system_information=$({
@@ -1389,4 +1389,4 @@ get-logs:
       echo
       echo "Logs Last Boot: $last_boot_logs"
     } | wl-copy
-    echo -e "${lightgreen}${bold}Logs and system information have been uploaded, and the links have been copied to your clipboard.\nPlease provide them to Bazzite Support for further help.${normal}"
+    echo -e "${lightgreen}${bold}Logs and system information have been uploaded, and the links have been copied to your clipboard.\nPlease provide them to Cordierite support for further help.${normal}"

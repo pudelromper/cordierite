@@ -9,10 +9,10 @@
 set -euo pipefail
 
 title="Nvidia Flatpak Runtime Mismatch"
-body="Bazzite noticed that there is an Nvidia flatpak runtime mismatch!\n\nHardware acceleration will not work in Flatpak Apps before you update it.\n"
+body="Cordierite noticed that there is an Nvidia flatpak runtime mismatch!\n\nHardware acceleration will not work in Flatpak Apps before you update it.\n"
 see_more_url="https://docs.bazzite.gg/General/issues_and_resolutions/#flatpak-apps-have-no-hardware-acceleration-on-nvidia"
 
-notify_cmd="/usr/bin/notify-send --app-name=\"Bazzite Nvidia Runtime Checker\" --expire-time=0"
+notify_cmd="/usr/bin/notify-send --app-name=\"Cordierite Nvidia Runtime Checker\" --expire-time=0"
 notify_cmd+=" \"${title:+$title}\" \"${body:+$body}\""
 notify_cmd+=" --action=\"see_more=See more\""
 notify_cmd+=" --action=\"update_flatpak=Update all Flatpaks\""

@@ -1,6 +1,6 @@
 [Desktop Entry]
-Name=Bazzite Portal
-Comment=Helps you setup Bazzite
+Name=Cordierite Portal
+Comment=Helps you setup Cordierite
 Exec=yafti_gtk.py /usr/share/yafti/yafti.yml
 Icon=io.github.ublue_os.yafti_gtk
 Terminal=false

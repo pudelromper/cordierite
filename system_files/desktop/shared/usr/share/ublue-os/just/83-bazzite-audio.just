@@ -325,14 +325,14 @@ setup-virtual-surround ACTION="":
     ]
     SPATIALIZER'
       echo ""
-      echo "Virtual surround sound has been successfully set up. Reboot your system or restart PipeWire for changes to take effect. ${bold}TIP:${normal} Use Bazzite Portal > Troubleshooting > Restart PipeWire or run 'ujust restart-pipewire' in the Terminal. Select 'Virtual Headphone Surround' as the default audio device to enable surround virtualization. ${bold}This setup is incompatible with EasyEffects or JamesDSP;${normal} make sure neither is currently running."
+      echo "Virtual surround sound has been successfully set up. Reboot your system or restart PipeWire for changes to take effect. ${bold}TIP:${normal} Use Cordierite Portal > Troubleshooting > Restart PipeWire or run 'ujust restart-pipewire' in the Terminal. Select 'Virtual Headphone Surround' as the default audio device to enable surround virtualization. ${bold}This setup is incompatible with EasyEffects or JamesDSP;${normal} make sure neither is currently running."
     elif [[ "${OPTION,,}" =~ ^disable ]]; then
       if [ -f "$LEGACY_CONFIG_FILE" ]; then
         rm "$LEGACY_CONFIG_FILE"
       fi
       rm -f "$CONFIG_FILE"
       rm -f "$HRTF_FILE"
-      echo "Virtual surround configuration file and HRTF removed, please reboot or restart PipeWire for changes to take effect. ${bold}TIP:${normal} Use Bazzite Portal > Troubleshooting > Restart PipeWire or run 'ujust restart-pipewire'."
+      echo "Virtual surround configuration file and HRTF removed, please reboot or restart PipeWire for changes to take effect. ${bold}TIP:${normal} Use Cordierite Portal > Troubleshooting > Restart PipeWire or run 'ujust restart-pipewire'."
     fi
 
 # Restart PipeWire

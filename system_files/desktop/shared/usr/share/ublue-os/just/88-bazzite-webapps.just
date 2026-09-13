@@ -37,7 +37,7 @@ get-media-app service="":
     notify_shortcut_added() {
         local service_name="$1"
         if command -v notify-send >/dev/null 2>&1; then
-            notify-send --app-name=Bazzite \
+            notify-send --app-name=Cordierite \
                 "Steam shortcut added" \
                 "$service_name is now available in your Steam library."
         fi

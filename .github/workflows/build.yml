@@ -52,11 +52,16 @@ jobs:
     runs-on: ubuntu-26.04
     permissions:
       contents: read
+      packages: read
     outputs:
       version: ${{ steps.generate.outputs.version }}
     steps:
       - name: Checkout
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+
+      # Tag listing must work once the packages become private
+      - name: Login to GitHub Container Registry
+        run: echo "${{ secrets.GITHUB_TOKEN }}" | skopeo login ghcr.io -u ${{ github.actor }} --password-stdin
 
       - name: Generate version tag
         id: generate
@@ -360,15 +365,13 @@ jobs:
         id: relabel
         env:
           IMAGE_LABELS: |
-            io.artifacthub.package.logo-url=https://raw.githubusercontent.com/ublue-os/bazzite/main/repo_content/logo.png
-            io.artifacthub.package.readme-url=https://raw.githubusercontent.com/ublue-os/bazzite/refs/heads/main/README.md
-            org.opencontainers.image.description=Bazzite is a custom image that brings the best of Linux gaming to all of your devices - including your favorite handheld.
+            org.opencontainers.image.description=Cordierite is a custom Fedora Atomic image built on Bazzite, tuned for everyday desktop use with security hardening and a poodle on top.
             org.opencontainers.image.licenses=Apache-2.0
             org.opencontainers.image.revision=${{ github.sha }}
-            org.opencontainers.image.source=https://bazzite.gg
-            org.opencontainers.image.title=Bazzite
-            org.opencontainers.image.vendor=Universal Blue
-            org.opencontainers.image.url=https://bazzite.gg
+            org.opencontainers.image.source=https://github.com/pudelromper/cordierite
+            org.opencontainers.image.title=Cordierite
+            org.opencontainers.image.vendor=pudelromper
+            org.opencontainers.image.url=https://github.com/pudelromper/cordierite
         run: |
           version="${{ needs.version.outputs.version }}"
 

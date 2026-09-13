@@ -3,7 +3,7 @@
 # shellcheck disable=SC1091
 source /usr/lib/ujust/ujust.sh
 
-title="Switcherooctl is deprecated on Bazzite and has been replaced by cardwire."
+title="Switcherooctl is deprecated on Cordierite and has been replaced by cardwire."
 body="Please use 'cardwire' instead. Run 'cardwire --help' for usage."
 see_more_url="https://docs.bazzite.gg/Advanced/cardwire/#usage"
 

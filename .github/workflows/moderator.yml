@@ -12,6 +12,7 @@ permissions: {}
 jobs:
   spam-detection:
     runs-on: ubuntu-slim
+    if: github.repository == 'ublue-os/bazzite'
     permissions:
       issues: write
       pull-requests: write

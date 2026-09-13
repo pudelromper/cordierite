@@ -6,6 +6,7 @@ on:
 jobs:
   close-issues:
     runs-on: ubuntu-latest
+    if: github.repository == 'ublue-os/bazzite'
     permissions:
       issues: write
       pull-requests: write

@@ -6,7 +6,7 @@ screens:
     actions:
       - id: "bazzite-documentation"
         title: "Read the Bazzite Docs"
-        description: "New to Bazzite or Linux? Check out our helpful documentation. An offline version can be accessed by searching for ‘Documentation’ in your app menu."
+        description: "New to Cordierite or Linux? Cordierite is built on Bazzite, so its documentation applies here too. An offline version can be accessed by searching for ‘Documentation’ in your app menu."
         default: false
         script: "xdg-open https://docs.bazzite.gg/"
       - id: "bazaar"
@@ -14,11 +14,11 @@ screens:
         description: "Your software store! Check out our curated selection for apps like Discord, Heroic Games Launcher, or Viper."
         default: false
         script: "yad --info --title=\"Tip\" --image=dialog-information --text \"You can launch Bazaar anytime from your pinned apps or the app menu.\" --button=\"I get it\"!gtk-ok! && nohup setsid gtk4-launch io.github.kolunmi.Bazaar >&/dev/null"
-      - id: "bazzite-discord"
-        title: "Get help through Discord"
-        description: "Enter our official server for Bazzite user tech support. Bring your system logs!"
+      - id: "cordierite-discussions"
+        title: "Ask a question in Discussions"
+        description: "Cordierite's own GitHub Discussions, for questions and tech support. Bring your system logs!"
         default: false
-        script: "xdg-open https://discord.gg/JQq48bYzrc"
+        script: "xdg-open https://github.com/pudelromper/cordierite/discussions"
       - id: "bazzite-discourse"
         title: "See our announcements in Discourse"
         description: "Our forum posts for the latest breaking news on Bazzite!"
