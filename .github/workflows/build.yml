@@ -298,6 +298,7 @@ jobs:
           BASE_IMAGE=${{ steps.base.outputs.base_image }}
           IMAGE_NAME=${{ matrix.image }}
           IMAGE_VENDOR=${{ steps.repo_owner_case.outputs.lowercase }}
+          IMAGE_REGISTRY=ghcr.io
           IMAGE_BRANCH=${{ github.ref_name }}
           KERNEL_FLAVOR=${{ matrix.kernel_flavor }}
           KERNEL_VERSION=${{ matrix.kernel_version }}

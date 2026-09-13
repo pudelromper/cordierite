@@ -1,0 +1,15 @@
+[Unit]
+Description=Build, sign and publish Cordierite images (and ISOs)
+Documentation=file:///opt/cordierite/local_build/README.md
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+WorkingDirectory=/opt/cordierite
+EnvironmentFile=-/etc/cordierite/build.env
+ExecStart=/opt/cordierite/local_build/release.sh
+TimeoutStartSec=10h
+Nice=10
+IOSchedulingClass=best-effort
+IOSchedulingPriority=7
