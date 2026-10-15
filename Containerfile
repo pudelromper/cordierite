@@ -177,6 +177,7 @@ RUN --mount=type=cache,dst=/var/cache \
     dnf5 -y install \
         bpftune-gaming \
         fuse-libs \
+        bazaar \
         greenboot \
         greenboot-default-health-checks \
         ublue-os-selinux-workarounds \
@@ -484,6 +485,7 @@ RUN --mount=type=cache,dst=/var/cache \
     systemctl disable scx_loader.service && \
     systemctl enable input-remapper.service && \
     systemctl enable bazzite-flatpak-manager.service && \
+    systemctl enable cordierite-default-flatpaks.service && \
     systemctl disable rpm-ostreed-automatic.timer && \
     systemctl enable uupd.timer && \
     systemctl enable incus-workaround.service && \

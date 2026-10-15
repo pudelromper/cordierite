@@ -13,6 +13,14 @@ command:
     exec: "/usr/bin/bash -n /usr/libexec/bazzite-user-setup"
     exit-status: 0
 
+  cordierite_default_flatpaks_has_valid_shell_syntax:
+    exec: "/usr/bin/bash -n /usr/libexec/cordierite-default-flatpaks"
+    exit-status: 0
+
+  cordierite_default_flatpaks_service_is_enabled:
+    exec: "systemctl is-enabled cordierite-default-flatpaks.service"
+    exit-status: 0
+
   bazzite_privileged_user_setup_has_valid_shell_syntax:
     exec: "/usr/bin/bash -n /usr/libexec/bazzite-privileged-user-setup"
     exit-status: 0
@@ -226,4 +234,6 @@ command:
 
 file:
   /etc/os-release:
+    exists: true
+  /usr/share/applications/io.github.kolunmi.Bazaar.desktop:
     exists: true

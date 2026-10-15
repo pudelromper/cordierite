@@ -1,0 +1,17 @@
+[Unit]
+Description=Install Cordierite default Flatpaks
+Wants=network-online.target
+After=network-online.target bazzite-flatpak-manager.service
+ConditionPathExists=/usr/share/cordierite/default-flatpaks
+ConditionPathExists=!/etc/cordierite/default_flatpaks_installed
+StartLimitIntervalSec=0
+
+[Service]
+# Not oneshot: downloading the apps must not hold up boot.
+Type=exec
+ExecStart=/usr/libexec/cordierite-default-flatpaks
+Restart=on-failure
+RestartSec=60
+
+[Install]
+WantedBy=multi-user.target
