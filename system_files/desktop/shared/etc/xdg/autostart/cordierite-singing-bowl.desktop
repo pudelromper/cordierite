@@ -1,0 +1,8 @@
+[Desktop Entry]
+Type=Application
+Name=Cordierite Singing Bowl
+Comment=Rings the singing bowl as the first session after boot starts
+Exec=/usr/libexec/cordierite-singing-bowl boot
+Terminal=false
+StartupNotify=false
+X-GNOME-Autostart-enabled=true

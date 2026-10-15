@@ -1,18 +1,23 @@
 #!/usr/bin/python3
-"""The Cordierite singing bowl, which rings as Game Mode starts.
+"""The Cordierite singing bowl, which rings at boot and as Game Mode starts.
 
-The bowl is synthesised on the spot rather than shipped as a recording, and struck afresh at every
-Game Mode start, so no two starts sound quite alike. This is PROD's bell, ported to Python with
-nothing outside the standard library; ffmpeg puts the strike into Steam's startup video.
+The bowl is synthesised on the spot rather than shipped as a recording, and struck afresh each
+time, so no two boots sound quite alike. This is PROD's bell, ported to Python with nothing outside
+the standard library; pw-play rings it, and ffmpeg puts it into Steam's startup video.
 
 usage:
+  cordierite-singing-bowl boot
+      Ring the bowl, unless it has already rung since boot. Its autostart entry runs this as a
+      desktop session starts, so the bowl rings as the first session after boot does.
   cordierite-singing-bowl startup SOURCE.webm DEST.webm...
       Strike the bowl into SOURCE's video and put the result at each DEST that already holds one
       of our startup videos. Anything else there, such as a video the user chose, is left alone.
-      steam-tweaks runs this at each Game Mode start.
+      steam-tweaks runs this as Game Mode starts, and the video rings the bowl for that boot.
   cordierite-singing-bowl video SOURCE.webm OUT.webm [--steady]
       Write SOURCE's video with the bowl struck into it to OUT. --steady strikes exactly as BELLS
       describes rather than as a hand would; the startup videos the image ships are made this way.
+  cordierite-singing-bowl wav OUT.wav [--steady]
+      Write the bowl as boot rings it to OUT.
 """
 import fcntl
 import math
@@ -84,7 +89,7 @@ def strike_bowl(rate=44100, secs=15, velocity=1, contact_ms=0.7, ring=20, spread
 
 
 # PROD's soft strike, from a padded mallet, rings as a timer starts; the firmer, brighter one when
-# the time is spent. Game Mode starting is a start.
+# the time is spent. A boot is a start.
 SOFT = {"velocity": 0.6, "contact_ms": 1.1}
 BELLS = {"start": SOFT, "overtime": {"velocity": 1, "contact_ms": 0.7}}
 
@@ -105,20 +110,18 @@ def by_hand(strike, stray=lambda by: by * (random.random() - random.random())):
             "turn": stray(0.2)}
 
 
-# § Startup video
-# The strike lands as the poodle pops in, 0.86 s into the 4 s video. The gain brings the soft strike
-# to the loudness of the chime the video used to have.
-RATE, LENGTH, AT, GAIN_DB = 48000, 4.0, 0.86, 7.5
-TITLE = "Cordierite singing bowl"
+# § Ringing
+# PROD lets a strike ring for 15 s, the last second easing down to silence. The gain brings the soft
+# strike to the loudness of the chime Game Mode's startup video used to have.
+RATE, RING_OUT, GAIN_DB = 48000, 15, 7.5
 
 
-def startup_strike(steady=False):
-    """The bowl as the startup video rings it, as interleaved stereo float samples."""
+def ring(secs=RING_OUT, at=0.0, steady=False):
+    """The soft strike, at seconds into secs of sound, as interleaved stereo samples at RATE."""
     strike = BELLS["start"] if steady else by_hand(BELLS["start"])
-    left, right = strike_bowl(rate=RATE, secs=LENGTH - AT, **strike)
+    left, right = strike_bowl(rate=RATE, secs=secs - at, **strike)
     gain = 10 ** (GAIN_DB / 20)
-    lead = [0.0] * (2 * round(RATE * AT))
-    return lead + [s * gain for pair in zip(left, right) for s in pair]
+    return [0.0] * (2 * round(RATE * at)) + [s * gain for pair in zip(left, right) for s in pair]
 
 
 def write_wav(path, samples, rate=RATE, channels=2):
@@ -131,11 +134,50 @@ def write_wav(path, samples, rate=RATE, channels=2):
         out.write(b"data" + struct.pack("<I", len(data)) + data)
 
 
+# § Boot
+# The boot splash comes and goes before anything on the system can play a sound, so the bowl rings
+# as the first session after boot starts. Each session's start asks for it, and the first one this
+# boot gets it: a desktop through its autostart entry, Game Mode through its startup video.
+
+
+def rung_this_boot():
+    """whether the bowl has already rung since boot; it counts as rung from now on"""
+    path = os.path.join(os.environ.get("XDG_STATE_HOME") or os.path.expanduser("~/.local/state"),
+                        "cordierite", "singing-bowl-boot")
+    with open("/proc/sys/kernel/random/boot_id") as f:
+        boot_id = f.read().strip()
+    try:
+        with open(path) as f:
+            if f.read().strip() == boot_id:
+                return True
+    except OSError:
+        pass
+    os.makedirs(os.path.dirname(path), exist_ok=True)
+    with open(path, "w") as f:
+        f.write(boot_id + "\n")
+    return False
+
+
+def boot():
+    if rung_this_boot():
+        return
+    with tempfile.TemporaryDirectory(prefix="cordierite-singing-bowl.") as tmp:
+        wav = os.path.join(tmp, "singing-bowl.wav")
+        write_wav(wav, ring())
+        subprocess.run(["pw-play", "--media-role", "Notification", wav], check=True)
+
+
+# § Startup video
+# The strike lands as the poodle pops in, 0.86 s into the 4 s video.
+LENGTH, AT = 4.0, 0.86
+TITLE = "Cordierite singing bowl"
+
+
 def strike_video(source, out, steady=False):
     """Write source's video, with the bowl struck as its sound, to out as WebM."""
     with tempfile.TemporaryDirectory(prefix="cordierite-singing-bowl.") as tmp:
         wav = os.path.join(tmp, "strike.wav")
-        write_wav(wav, startup_strike(steady))
+        write_wav(wav, ring(LENGTH, AT, steady))
         # The video's timestamps are counted from its first frame, so that striking a video made
         # this way afresh leaves the strike where it was against the picture.
         subprocess.run(["ffmpeg", "-nostdin", "-loglevel", "error", "-y", "-i", source, "-i", wav,
@@ -157,6 +199,8 @@ def startup(source, dests):
     dests = [d for d in dests if ours(d)]
     if not dests:
         return
+    # the video rings the bowl, so a desktop started later this boot needn't
+    rung_this_boot()
     lock_path = os.path.join(os.environ.get("XDG_RUNTIME_DIR") or tempfile.gettempdir(),
                              "cordierite-singing-bowl.lock")
     with open(lock_path, "w") as lock, tempfile.TemporaryDirectory(prefix="cordierite-singing-bowl.") as tmp:
@@ -179,10 +223,17 @@ def startup(source, dests):
 
 
 def main(argv):
-    if len(argv) >= 3 and argv[0] == "startup":
+    steady = argv[-1:] == ["--steady"]
+    if steady:
+        argv = argv[:-1]
+    if argv == ["boot"] and not steady:
+        boot()
+    elif len(argv) >= 3 and argv[0] == "startup" and not steady:
         startup(argv[1], argv[2:])
-    elif len(argv) in (3, 4) and argv[0] == "video" and argv[3:] in ([], ["--steady"]):
-        strike_video(argv[1], argv[2], steady=argv[3:] == ["--steady"])
+    elif len(argv) == 3 and argv[0] == "video":
+        strike_video(argv[1], argv[2], steady)
+    elif len(argv) == 2 and argv[0] == "wav":
+        write_wav(argv[1], ring(steady=steady))
     else:
         sys.exit(__doc__.split("\n\n", 2)[2].rstrip())
 
