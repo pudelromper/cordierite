@@ -247,6 +247,8 @@ RUN --mount=type=cache,dst=/var/cache \
         bazzite-portal \
         kernel-tools \
         ls-iommu \
+        plymouth-plugin-label \
+        plymouth-plugin-script \
         xdg-native-messaging-proxy && \
     dnf5 -y swap \
         --repo terra \

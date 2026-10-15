@@ -18,3 +18,9 @@ done
 if [[ -f /usr/share/steamos/steamos.png && -f /usr/share/cordierite/branding/steamos.png ]]; then
     cp /usr/share/cordierite/branding/steamos.png /usr/share/steamos/steamos.png
 fi
+
+# Boot splash: the poodle wakes up while the system starts and naps while it shuts
+# down. build-initramfs runs after this, so the initramfs gets the theme.
+if [[ -f /usr/share/plymouth/themes/cordierite/cordierite.plymouth ]]; then
+    plymouth-set-default-theme cordierite
+fi
