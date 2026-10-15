@@ -3,6 +3,8 @@ Type=Application
 Name=Cordierite Singing Bowl
 Comment=Rings the singing bowl as the first session after boot starts
 Exec=/usr/libexec/cordierite-singing-bowl boot
+# Desktops only: Game Mode rings the bowl through its startup video
+OnlyShowIn=GNOME;KDE;
 Terminal=false
 StartupNotify=false
 X-GNOME-Autostart-enabled=true
