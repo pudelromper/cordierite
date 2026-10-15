@@ -35,3 +35,17 @@ rm -f /usr/share/backgrounds/default.xml
 
 mkdir -p /usr/share/wallpapers/bazzite/convergence/contents/images
 ln -s /usr/share/wallpapers/convergence.jxl /usr/share/wallpapers/bazzite/convergence/contents/images/3940x2160.jxl
+
+# Cordierite look-and-feel: the light salmon/tan colour scheme and its splash.
+# These live with the steamdeck-kde-presets spec, but the image installs the
+# upstream package from COPR, so install them from the spec sources here.
+presets=/ctx-kde-presets
+lnf=/usr/share/plasma/look-and-feel/com.cordierite.desktop
+install -Dm644 "$presets/Cordierite.colors" /usr/share/color-schemes/Cordierite.colors
+install -Dm644 "$presets/look-and-feel/com.cordierite.desktop/metadata.json" "$lnf/metadata.json"
+install -Dm644 "$presets/look-and-feel/com.cordierite.desktop/contents/defaults" "$lnf/contents/defaults"
+install -Dm644 "$presets/look-and-feel/com.cordierite.desktop/contents/splash/Splash.qml" "$lnf/contents/splash/Splash.qml"
+install -Dm644 "$presets/cordierite_logo.svgz" "$lnf/contents/splash/images/cordierite_logo.svgz"
+install -Dm644 /usr/share/plasma/look-and-feel/com.valve.vapor.desktop/contents/splash/images/busywidget.svgz "$lnf/contents/splash/images/busywidget.svgz" ||
+  install -Dm644 /usr/share/plasma/look-and-feel/org.kde.breeze.desktop/contents/splash/images/busywidget.svgz "$lnf/contents/splash/images/busywidget.svgz"
+install -Dm644 "$presets/kdeglobals-desktop" /etc/xdg/kdeglobals
