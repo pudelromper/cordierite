@@ -797,6 +797,7 @@ RUN --mount=type=cache,dst=/var/cache \
     ln -s libnvidia-ml.so.1 /usr/lib64/libnvidia-ml.so && \
     dnf5 config-manager setopt "terra-mesa".enabled=0 && \
     dnf5 -y copr disable ublue-os/staging && \
+    dnf5 -y install policycoreutils-python-utils && \
     dnf5 -y swap \
         --repo terra-extras \
             waydroid waydroid-nvidia && \
