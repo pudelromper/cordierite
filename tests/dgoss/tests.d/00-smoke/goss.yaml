@@ -99,6 +99,46 @@ command:
     stdout:
       - "/^(OK|SKIP):/"
 
+  # Deck images strike the singing bowl afresh into Game Mode's startup video at each start, which
+  # needs ffmpeg and the shipped startup videos to carry the bowl's title.
+  deck_strikes_the_singing_bowl:
+    exec: |
+      sh -lc '
+      info=/usr/share/ublue-os/image-info.json
+      name=$(sed -n "s/.*\"image-name\"[[:space:]]*:[[:space:]]*\"\([^\"]*\)\".*/\1/p" "$info" 2>/dev/null)
+      if [ -z "$name" ]; then
+        name=$(. /usr/lib/os-release 2>/dev/null; printf "%s" "$VARIANT_ID")
+      fi
+      if [ -z "$name" ]; then
+        echo "FAIL: unable to determine image name from $info or /usr/lib/os-release"
+        exit 1
+      fi
+      case "$name" in
+        *deck*) ;;
+        *) echo "SKIP: $name is not a deck image" ; exit 0 ;;
+      esac
+      for video in /usr/share/ublue-os/bazzite/bazzite.webm /usr/share/ublue-os/bazzite/bazzite-oled.webm; do
+        if ! grep -qa "Cordierite singing bowl" "$video"; then
+          echo "FAIL: $video does not carry the singing bowl title, so it would never be struck afresh"
+          exit 1
+        fi
+      done
+      out=$(mktemp --suffix=.webm)
+      if ! /usr/libexec/cordierite-singing-bowl video /usr/share/ublue-os/bazzite/bazzite.webm "$out"; then
+        echo "FAIL: cordierite-singing-bowl could not strike the bowl into the startup video"
+        exit 1
+      fi
+      if ! grep -qa "Cordierite singing bowl" "$out"; then
+        echo "FAIL: the freshly struck startup video does not carry the singing bowl title"
+        exit 1
+      fi
+      echo "OK: $name strikes the singing bowl into the startup video"
+      '
+    exit-status: 0
+    stdout:
+      - "/^(OK|SKIP):/"
+    timeout: 60000
+
   # ryzen_smu backs TDP control, which deck images depend on.
   deck_has_ryzen_smu:
     exec: |

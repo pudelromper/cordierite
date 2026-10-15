@@ -1,0 +1,191 @@
+#!/usr/bin/python3
+"""The Cordierite singing bowl, which rings as Game Mode starts.
+
+The bowl is synthesised on the spot rather than shipped as a recording, and struck afresh at every
+Game Mode start, so no two starts sound quite alike. This is PROD's bell, ported to Python with
+nothing outside the standard library; ffmpeg puts the strike into Steam's startup video.
+
+usage:
+  cordierite-singing-bowl startup SOURCE.webm DEST.webm...
+      Strike the bowl into SOURCE's video and put the result at each DEST that already holds one
+      of our startup videos. Anything else there, such as a video the user chose, is left alone.
+      steam-tweaks runs this at each Game Mode start.
+  cordierite-singing-bowl video SOURCE.webm OUT.webm [--steady]
+      Write SOURCE's video with the bowl struck into it to OUT. --steady strikes exactly as BELLS
+      describes rather than as a hand would; the startup videos the image ships are made this way.
+"""
+import fcntl
+import math
+import os
+import random
+import shutil
+import struct
+import subprocess
+import sys
+import tempfile
+
+# § Bowl
+# The rows are Bowl 1 of Inácio, Henrique & Antunes, "The dynamics of Tibetan singing bowls" (Acta
+# Acustica 92, 2006): 934 g, 180 mm across, sounding A3. No bowl is perfectly round, so each of its
+# rim modes (2 to 8 nodal diameters) is really a PAIR of resonances a hair apart, and the slow
+# beating within each pair is what makes a bowl sing. The first two numbers are the measured pair in
+# Hz. The third is NOT measured: the paper does not say where each pair's pattern sits round the rim.
+# It is the angle in radians between the mallet and that pattern, which sets how deeply the pair
+# beats (0 = not at all) and, by its sign, towards which ear.
+BOWL = [(219.6, 220.6, -0.42), (609.1, 609.9, 0.39), (1135.9, 1139.7, -0.36), (1787.6, 1787.9, 0.33),
+        (2555.2, 2564.8, -0.29), (3427.0, 3428.3, 0.2), (4376.3, 4389.4, -0.24)]
+
+
+def strike_bowl(rate=44100, secs=15, velocity=1, contact_ms=0.7, ring=20, spread=0.1, turn=0):
+    """One strike of the bowl, as [left, right] samples.
+
+    Every member of every pair is a sine that starts at the instant of contact and dies away
+    exponentially, which is all a struck resonance is. Four things shape it:
+      the mallet: a harder one touches for less time (contact_ms), and a shorter push carries more
+        high frequency, so the upper modes speak. Its force is taken as a Gaussian bump contact_ms
+        wide, whose spectrum is the Gaussian in amp. The paper's contact stiffnesses of 10^5 to
+        10^7 N/m work out at 1.4 down to 0.14 ms.
+      the damping: the bronze's own (measured: 0.002% of critical at the lowest mode, rising to
+        0.015% at the highest) plus the cushion the bowl sits on, which is what ring sets: the
+        seconds the cushion alone would take to quieten a mode by 60 dB.
+      the listener: mode n's pattern runs as cos(n theta) round the rim, so what an ear receives
+        depends on where round the bowl it is. Two ears spread radians either side of the mallet
+        hear each pair beat to a different depth, and the sound drifts between them.
+      the turn: where round the rim the mallet lands, which no hand repeats. turn radians on from
+        the mark BOWL's angles describe, a mode of n diameters has moved n times that far through
+        its pattern, so a few millimetres nudge the hum and re-deal the shimmer.
+    """
+    count = round(rate * secs)
+    left, right = [0.0] * count, [0.0] * count
+    for i, (f_a, f_b, angle) in enumerate(BOWL):
+        for member, f in enumerate((f_a, f_b)):
+            n = i + 2
+            tilt = angle + n * turn
+            wave = math.sin if member else math.cos
+            # per second; 6.91 = ln 1000 = 60 dB
+            decay = 6.91 / ring + 2 * math.pi * f * 2e-5 * (f / 220) ** 0.67
+            w = 2 * math.pi * f / rate
+            r = math.exp(-decay / rate)
+            c, r2 = 2 * r * math.cos(w), r * r
+            amp = 0.2 * velocity * math.exp(-((math.pi * f * contact_ms / 1000) ** 2) / 8) * wave(-tilt)
+            gl, gr = amp * wave(-n * spread - tilt), amp * wave(n * spread - tilt)
+            # y runs through r^k sin(wk) by its two-term recurrence, so the loop needs no trig;
+            # it stops once the mode is 87 dB down.
+            y, prev = 0.0, -math.sin(w) / r
+            for k in range(min(count, math.ceil(rate * 10 / decay))):
+                left[k] += gl * y
+                right[k] += gr * y
+                y, prev = c * y - r2 * prev, y
+    fade = min(count, rate)  # ease the last second down to true silence
+    for ear in (left, right):
+        for j in range(fade):
+            ear[count - 1 - j] *= j / fade
+    return left, right
+
+
+# PROD's soft strike, from a padded mallet, rings as a timer starts; the firmer, brighter one when
+# the time is spent. Game Mode starting is a start.
+SOFT = {"velocity": 0.6, "contact_ms": 1.1}
+BELLS = {"start": SOFT, "overtime": {"velocity": 1, "contact_ms": 0.7}}
+
+
+def by_hand(strike, stray=lambda by: by * (random.random() - random.random())):
+    """A strike as a hand delivers it, which is never twice the same.
+
+    Up to 15% harder or softer, a tenth longer or shorter in contact, and as much as 18 mm round the
+    rim wide of its mark (0.2 rad of a bowl 180 mm across). That reach is the hum's: far enough one
+    way to find it throbbing to nothing, and just short, the other way, of the crest where it stands
+    still. stray gives something within plus or minus its argument; the difference of two random
+    numbers favours the middle, as a practised hand does, so the strike BELLS and BOWL describe
+    stays the likeliest. Only the strike strays. The pitches, the beat rates and the damping are
+    the bronze's own, and it is the same bowl whoever strikes it.
+    """
+    return {"velocity": strike["velocity"] * (1 + stray(0.15)),
+            "contact_ms": strike["contact_ms"] * (1 + stray(0.1)),
+            "turn": stray(0.2)}
+
+
+# § Startup video
+# The strike lands as the poodle pops in, 0.86 s into the 4 s video. The gain brings the soft strike
+# to the loudness of the chime the video used to have.
+RATE, LENGTH, AT, GAIN_DB = 48000, 4.0, 0.86, 7.5
+TITLE = "Cordierite singing bowl"
+
+
+def startup_strike(steady=False):
+    """The bowl as the startup video rings it, as interleaved stereo float samples."""
+    strike = BELLS["start"] if steady else by_hand(BELLS["start"])
+    left, right = strike_bowl(rate=RATE, secs=LENGTH - AT, **strike)
+    gain = 10 ** (GAIN_DB / 20)
+    lead = [0.0] * (2 * round(RATE * AT))
+    return lead + [s * gain for pair in zip(left, right) for s in pair]
+
+
+def write_wav(path, samples, rate=RATE, channels=2):
+    """32-bit float WAV"""
+    data = struct.pack(f"<{len(samples)}f", *samples)
+    with open(path, "wb") as out:
+        out.write(b"RIFF" + struct.pack("<I", 36 + len(data)) + b"WAVE")
+        block = channels * 4
+        out.write(b"fmt " + struct.pack("<IHHIIHH", 16, 3, channels, rate, rate * block, block, 32))
+        out.write(b"data" + struct.pack("<I", len(data)) + data)
+
+
+def strike_video(source, out, steady=False):
+    """Write source's video, with the bowl struck as its sound, to out as WebM."""
+    with tempfile.TemporaryDirectory(prefix="cordierite-singing-bowl.") as tmp:
+        wav = os.path.join(tmp, "strike.wav")
+        write_wav(wav, startup_strike(steady))
+        # The video's timestamps are counted from its first frame, so that striking a video made
+        # this way afresh leaves the strike where it was against the picture.
+        subprocess.run(["ffmpeg", "-nostdin", "-loglevel", "error", "-y", "-i", source, "-i", wav,
+                        "-map", "0:v:0", "-c:v", "copy", "-bsf:v", "setts=pts=PTS-STARTPTS:dts=DTS-STARTDTS",
+                        "-map", "1:a:0", "-c:a", "libvorbis", "-q:a", "5",
+                        "-metadata", f"title={TITLE}", "-f", "webm", out], check=True)
+
+
+def ours(path):
+    """whether path holds a startup video of ours, which carries TITLE near its start"""
+    try:
+        with open(path, "rb") as video:
+            return TITLE.encode() in video.read(65536)
+    except OSError:
+        return False
+
+
+def startup(source, dests):
+    dests = [d for d in dests if ours(d)]
+    if not dests:
+        return
+    lock_path = os.path.join(os.environ.get("XDG_RUNTIME_DIR") or tempfile.gettempdir(),
+                             "cordierite-singing-bowl.lock")
+    with open(lock_path, "w") as lock, tempfile.TemporaryDirectory(prefix="cordierite-singing-bowl.") as tmp:
+        # one strike at a time, should two Game Mode starts overlap
+        try:
+            fcntl.flock(lock, fcntl.LOCK_EX | fcntl.LOCK_NB)
+        except BlockingIOError:
+            return
+        video = os.path.join(tmp, "startup.webm")
+        strike_video(source, video)
+        # Each video is swapped whole, so Steam opening one meanwhile gets the old strike or the new.
+        for dest in dests:
+            part = os.path.join(os.path.dirname(dest), f".{os.path.basename(dest)}.part")
+            try:
+                shutil.copyfile(video, part)
+                os.replace(part, dest)
+            finally:
+                if os.path.exists(part):
+                    os.remove(part)
+
+
+def main(argv):
+    if len(argv) >= 3 and argv[0] == "startup":
+        startup(argv[1], argv[2:])
+    elif len(argv) in (3, 4) and argv[0] == "video" and argv[3:] in ([], ["--steady"]):
+        strike_video(argv[1], argv[2], steady=argv[3:] == ["--steady"])
+    else:
+        sys.exit(__doc__.split("\n\n", 2)[2].rstrip())
+
+
+if __name__ == "__main__":
+    main(sys.argv[1:])
