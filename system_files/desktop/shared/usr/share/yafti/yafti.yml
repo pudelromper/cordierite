@@ -37,11 +37,6 @@ screens:
         description: "Command-line tools for interfacing with the Android operating system — intalled using Brew."
         default: false
         script: 'eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)" && brew install --cask android-platform-tools'
-      - id: "antigravity-linux"
-        title: "Antigravity"
-        description: "AI-powered IDE from Google — installed using Brew."
-        default: false
-        script: 'eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)" && brew trust ublue-os/tap && brew tap ublue-os/tap && brew install --cask antigravity-linux'
       - id: "asus"
         title: "asusctl & ROG Control Center"
         description: "Utilities for management of ASUS hardware."
@@ -150,24 +145,6 @@ screens:
           - id: "uninstall"
             label: "Uninstall «lsfg-vk v2»"
             script: 'ujust get-lsfg uninstall; status=$?; echo; echo "Press Enter to close..."; read -r _; exit $status'
-      - id: "openrazer"
-        title: "OpenRazer"
-        description: "Community-led Linux support software for Razer gaming hardware."
-        default: false
-        status_script: "ujust install-openrazer status"
-        options:
-          - id: "install-razer-genie"
-            label: "Install with Razer Genie"
-            script: 'ujust install-openrazer install-razer-genie; status=$?; echo; echo "Press Enter to close..."; read -r _; exit $status'
-          - id: "install-polychromatic"
-            label: "Install with Polychromatic"
-            script: 'ujust install-openrazer install-polychromatic; status=$?; echo; echo "Press Enter to close..."; read -r _; exit $status'
-          - id: "install"
-            label: "Install without Frontend"
-            script: 'ujust install-openrazer install; status=$?; echo; echo "Press Enter to close..."; read -r _; exit $status'
-          - id: "uninstall"
-            label: "Uninstall All"
-            script: 'ujust install-openrazer uninstall; status=$?; echo; echo "Press Enter to close..."; read -r _; exit $status'
       - id: "openrgb"
         title: "OpenRGB"
         description: "Vendor agnostic, open source RGB lighting control."
@@ -263,104 +240,6 @@ screens:
           - id: "helper"
             label: "Install Helper"
             script: "ujust configure-waydroid helper"
-  - title: "Get Media Apps"
-    description: "Configure streaming services"
-    actions:
-      - id: "amazon-prime-video"
-        title: "Amazon Prime Video"
-        description: "Subscription service for entertainment on demand."
-        default: false
-        script: "ujust get-media-app \"Amazon Prime Video\""
-      - id: "apple-tv"
-        title: "Apple TV"
-        description: "Subscription service for entertainment on demand."
-        default: false
-        script: "ujust get-media-app \"Apple TV\""
-      - id: "crunchyroll"
-        title: "Crunchyroll"
-        description: "Subscription service centered on Japanese animation on demand."
-        default: false
-        script: "ujust get-media-app \"Crunchyroll\""
-      - id: "curiosity-stream"
-        title: "Curiosity Stream"
-        description: "Subscription service for non-fiction content on demand."
-        default: false
-        script: "ujust get-media-app \"Curiosity Stream\""
-      - id: "disney-plus"
-        title: "Disney Plus"
-        description: "Subscription service for entertainment on demand."
-        default: false
-        script: "ujust get-media-app \"Disney Plus\""
-      # - id: "geforce-now"
-      #   title: "GeForce Now"
-      #   description: "Cloud gaming service"
-      #   default: false
-      #   script: "ujust get-media-app \"GeForce Now\""
-      - id: "hbo-max"
-        title: "HBO Max"
-        description: "Subscription service for entertainment on demand."
-        default: false
-        script: "ujust get-media-app \"HBO Max\""
-      - id: "hulu"
-        title: "Hulu"
-        description: "Subscription service for entertainment on demand."
-        default: false
-        script: "ujust get-media-app \"Hulu\""
-      - id: "jellyfin"
-        title: "Jellyfin"
-        description: "Free (as in ‘freedom’) client for self-hosted media."
-        default: false
-        script: "ujust get-media-app \"Jellyfin Media Player\""
-      - id: "netflix"
-        title: "Netflix"
-        description: "Popular subscription service for entertainment on demand."
-        default: false
-        script: "ujust get-media-app \"Netflix\""
-      - id: "paramount-plus"
-        title: "Paramount Plus"
-        description: "Subscription service for entertainment on demand."
-        default: false
-        script: "ujust get-media-app \"Paramount Plus\""
-      - id: "peacock"
-        title: "Peacock"
-        description: "Subscription service for entertainment on demand from NBCUniversal."
-        default: false
-        script: "ujust get-media-app \"Peacock\""
-      - id: "plex-htpc"
-        title: "Plex HTPC"
-        description: "Client for video on demand or self-hosted media."
-        default: false
-        script: "ujust get-media-app \"Plex HTPC\""
-      - id: "sling-tv"
-        title: "Sling TV"
-        description: "Service for streaming live television programming."
-        default: false
-        script: "ujust get-media-app \"Sling TV\""
-      - id: "spotify"
-        title: "Spotify"
-        description: "Popular music streaming service."
-        default: false
-        script: "ujust get-media-app \"Spotify\""
-      - id: "vimeo"
-        title: "Vimeo"
-        description: "Service for sharing video, live or on demand."
-        default: false
-        script: "ujust get-media-app \"Vimeo\""
-      - id: "youtube"
-        title: "YouTube"
-        description: "Popular platform for sharing video, live or on demand."
-        default: false
-        script: "ujust get-media-app \"YouTube\""
-      - id: "youtube-music"
-        title: "YouTube Music"
-        description: "Streaming service for music."
-        default: false
-        script: "ujust get-media-app \"YouTube Music\""
-      - id: "youtube-tv"
-        title: "YouTube TV"
-        description: "Subscription service for streaming live television programming."
-        default: false
-        script: "ujust get-media-app \"YouTube TV\""
   - title: "Manage Cordierite"
     description: "System management and configuration"
     actions:
