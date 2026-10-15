@@ -1,0 +1,20 @@
+#!/usr/bin/bash
+# Cover Bazzite artwork that packages install with the Cordierite poodle.
+# image-info runs this at the end of every image stage, after the last package
+# install, so a package install or update can't put the Bazzite logos back.
+
+set -eoux pipefail
+
+POODLE_SVG=/usr/share/icons/hicolor/scalable/places/cordierite-logo.svg
+
+# Plasma login splash: steamdeck-kde-presets ships bazzite_logo.svgz
+for logo in /usr/share/plasma/look-and-feel/*/contents/splash/images/bazzite_logo.svgz; do
+    if [[ -f $logo ]]; then
+        gzip -9 -n -c "$POODLE_SVG" >"$logo"
+    fi
+done
+
+# Steam logo on Deck images: jupiter-hw-support-btrfs ships one with a Bazzite badge
+if [[ -f /usr/share/steamos/steamos.png && -f /usr/share/cordierite/branding/steamos.png ]]; then
+    cp /usr/share/cordierite/branding/steamos.png /usr/share/steamos/steamos.png
+fi
