@@ -6,7 +6,7 @@ IMAGE_BRANCH=$(jq -r '."image-branch"' < $IMAGE_INFO)
 FEDORA_VERSION=$(jq -r '."fedora-version"' < $IMAGE_INFO)
 
 # SCRIPT VERSION
-HWS_VER=76
+HWS_VER=83
 HWS_VER_FILE="/etc/bazzite/hws_version"
 HWS_VER_RAN=$(cat $HWS_VER_FILE)
 
@@ -18,9 +18,14 @@ KNOWN_IMAGE_BRANCH=$(cat $KNOWN_IMAGE_BRANCH_FILE)
 KNOWN_FEDORA_VERSION_FILE="/etc/bazzite/fedora_version"
 KNOWN_FEDORA_VERSION=$(cat $KNOWN_FEDORA_VERSION_FILE)
 
-# Take care of autologin for non-deck or -dx images where this file is not needed.
+# Remove Deck autologin overrides on non-deck, non-dx images.
+# Run before the version check so existing desktop installations are repaired too.
 if [[ "$IMAGE_NAME" != *deck* && "$IMAGE_NAME" != *dx* ]]; then
-  rm -f /etc/sddm.conf.d/steamos.conf
+  rm -f /etc/sddm.conf.d/steamos.conf \
+        /etc/sddm.conf.d/zz-steamos-autologin.conf \
+        /etc/sddm.conf.d/zzt-steamos-temp-login.conf \
+        /etc/sddm.conf.d/zz-bazzite-autologin.conf \
+        /etc/sddm.conf.d/zz-holo-autologin.conf
 fi
 
 if [[ "$KNOWN_IMAGE_NAME" == "$IMAGE_NAME" && \
@@ -58,8 +63,8 @@ fi
 if /usr/libexec/hwsupport/valve-hardware || [[ ":83N0:83N1:83E1:ROG Ally RC71L:ROG Ally X RC72LA:" =~ ":$SYS_ID:" ]]; then
   echo "Checking for needed IOMMU change."
 
-  if [[ ! $KARGS =~ "amd_iommu" ]]; then
-    NEEDED_KARGS+=("--append-if-missing=amd_iommu=off")
+  if [[ $KARGS =~ "amd_iommu" ]]; then
+    NEEDED_KARGS+=("--delete-if-present=amd_iommu=off")
   fi
 fi
 
@@ -147,8 +152,8 @@ if [[ $IMAGE_NAME =~ "deck" ]]; then
       echo "PowerStation HTPC detected, unmasking powerstation and masking inputplumber".
       systemctl unmask powerstation.service
       systemctl enable --now powerstation.service
-      systemctl stop inputplumber.service
-      systemctl mask inputplumber.service
+      systemctl unmask inputplumber.service
+      systemctl enable --now inputplumber.service
       systemctl disable --now jupiter-fan-control.service
       systemctl disable --now vpower.service
       systemctl disable --now jupiter-biosupdate.service
@@ -160,8 +165,8 @@ if [[ $IMAGE_NAME =~ "deck" ]]; then
     echo "Non-handheld hardware detected, unmasking PPD and masking powerstation".
     systemctl unmask tuned.service
     systemctl unmask tuned-ppd.service
-    systemctl stop inputplumber.service
-    systemctl mask inputplumber.service
+    systemctl unmask inputplumber.service
+    systemctl enable --now inputplumber.service
     systemctl stop powerstation.service
     systemctl mask powerstation.service
     systemctl mask pulse8-cec-inputattach@.service
@@ -248,6 +253,17 @@ fi
 if [[ -f "/var/lib/waydroid/lxc/waydroid/config" ]]; then
   echo "Removing unneeded apparmor entry from Waydroid LXC"
   sed -i '/lxc\.apparmor\.profile\s*=\s*unconfined/d' "/var/lib/waydroid/lxc/waydroid/config"
+fi
+
+# HIBERNATION
+if /usr/libexec/hwsupport/needs-hibernation; then
+  if [[ ! -f /etc/bazzite/hibernation_enabled ]]; then
+    echo "Hardware requiring hibernation detected, enabling hibernation"
+    /usr/libexec/bazzite-enable-hibernation || exit 1
+    SHOULD_REBOOT=true
+  fi
+
+  systemctl enable --now acpid.service
 fi
 
 # HOSTNAME FIX
