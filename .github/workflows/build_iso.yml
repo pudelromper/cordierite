@@ -204,32 +204,23 @@ jobs:
           compression-level: 0
           overwrite: true
 
-      - name: Upload ISO to Backblaze B2
+      # rclone instead of a container action: the disk cleanup step at the top
+      # prunes Docker images, including container actions pre-built at job start.
+      # Same layout as local_build/build-iso.sh with RCLONE_REMOTE=b2:<bucket>/releases.
+      - name: Upload ISO, Checksum and Signature to Backblaze B2
         if: github.event_name == 'release' || inputs.upload_to_b2 == true
-        uses: yamatt/backblaze-b2-upload-action@v7
-        with:
-          key_id: ${{ secrets.B2_KEY_ID }}
-          application_key: ${{ secrets.B2_APPLICATION_KEY }}
-          bucket_name: ${{ secrets.B2_BUCKET_NAME }}
-          file_path: ${{ steps.upload-directory.outputs.iso-upload-dir }}/${{ steps.upload-directory.outputs.iso-name }}
-          remote_path: releases/${{ steps.generate-tag.outputs.tag }}/${{ steps.upload-directory.outputs.iso-name }}
-
-      - name: Upload Checksum to Backblaze B2
-        if: github.event_name == 'release' || inputs.upload_to_b2 == true
-        uses: yamatt/backblaze-b2-upload-action@v7
-        with:
-          key_id: ${{ secrets.B2_KEY_ID }}
-          application_key: ${{ secrets.B2_APPLICATION_KEY }}
-          bucket_name: ${{ secrets.B2_BUCKET_NAME }}
-          file_path: ${{ steps.upload-directory.outputs.iso-upload-dir }}/${{ steps.upload-directory.outputs.iso-name }}-CHECKSUM
-          remote_path: releases/${{ steps.generate-tag.outputs.tag }}/${{ steps.upload-directory.outputs.iso-name }}-CHECKSUM
-
-      - name: Upload Signature to Backblaze B2
-        if: github.event_name == 'release' || inputs.upload_to_b2 == true
-        uses: yamatt/backblaze-b2-upload-action@v7
-        with:
-          key_id: ${{ secrets.B2_KEY_ID }}
-          application_key: ${{ secrets.B2_APPLICATION_KEY }}
-          bucket_name: ${{ secrets.B2_BUCKET_NAME }}
-          file_path: ${{ steps.upload-directory.outputs.iso-upload-dir }}/${{ steps.upload-directory.outputs.iso-name }}.sig
-          remote_path: releases/${{ steps.generate-tag.outputs.tag }}/${{ steps.upload-directory.outputs.iso-name }}.sig
+        shell: bash
+        env:
+          RCLONE_CONFIG_B2_TYPE: b2
+          RCLONE_CONFIG_B2_ACCOUNT: ${{ secrets.B2_KEY_ID }}
+          RCLONE_CONFIG_B2_KEY: ${{ secrets.B2_APPLICATION_KEY }}
+          B2_BUCKET_NAME: ${{ secrets.B2_BUCKET_NAME }}
+          ISO_UPLOAD_DIR: ${{ steps.upload-directory.outputs.iso-upload-dir }}
+          ISO_NAME: ${{ steps.upload-directory.outputs.iso-name }}
+          TAG: ${{ steps.generate-tag.outputs.tag }}
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y rclone
+          for f in "${ISO_NAME}" "${ISO_NAME}-CHECKSUM" "${ISO_NAME}.sig"; do
+            rclone copyto --retries 3 "${ISO_UPLOAD_DIR}/${f}" "b2:${B2_BUCKET_NAME}/releases/${TAG}/${f}"
+          done
