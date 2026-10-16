@@ -1,0 +1,491 @@
+# Cordierite boot splash, on the light poodle wallpaper.
+#
+# Starting up: the Game Mode animation. A heart pops, the poodle bounces in and
+# breathes while little hearts drift up, then it settles above the wordmark and
+# keeps breathing until the desktop is ready.
+# Shutting down or restarting: the poodle naps while z's float up.
+#
+# Sizes and positions are in layout units, one unit being a pixel on a screen
+# 1000px tall. The images are drawn at 1.44 pixels per unit, with a set at twice
+# that for screens over 1600px tall, and are rescaled to the screen in layout().
+
+Plymouth.SetRefreshRate(30);
+FPS = 30;
+
+Window.SetBackgroundTopColor(0.941, 0.804, 0.769);
+Window.SetBackgroundBottomColor(0.941, 0.804, 0.769);
+
+mode = Plymouth.GetMode();
+napping = (mode == "shutdown" || mode == "reboot");
+
+src.background = Image("background.png");
+src.shadow = Image("shadow.png");             # under a 180-unit poodle
+
+# the art drawn at 1.44 pixels per unit (set "") or 2.88 (set "@2x")
+fun load_art(set)
+  {
+    global.art = set;
+    global.src.poodle = Image("poodle" + set + ".png");             # 360 units
+    global.src.small = Image("poodle-small" + set + ".png");        # 210 units
+    global.src.sleepy = Image("poodle-sleepy" + set + ".png");      # 220 units
+    global.src.heart = Image("heart" + set + ".png");               # 139 units
+    global.src.heart_small = Image("heart-small" + set + ".png");   # 42 units
+    global.src.bullet = Image("bullet" + set + ".png");
+    global.src.wordmark = Image("wordmark" + set + ".png");
+    global.src.z = Image("z" + set + ".png");                       # 36 units
+    global.src.lock = Image("lock" + set + ".png");
+    global.src.entry = Image("entry" + set + ".png");
+  }
+art = "none";
+
+background = Sprite();
+background.SetZ(-100);
+big_heart = Sprite();
+big_heart.SetZ(1);
+shadow = Sprite();
+shadow.SetZ(2);
+pood = Sprite();
+pood.SetZ(3);
+wordmark = Sprite();
+wordmark.SetZ(3);
+for (n = 0; n < 4; n++)
+  {
+    hearts[n] = Sprite();
+    hearts[n].SetZ(4);
+  }
+for (n = 0; n < 3; n++)
+  {
+    zs[n] = Sprite();
+    zs[n].SetZ(4);
+  }
+message = Sprite();
+message.SetZ(10);
+message_text = "";
+update_status = Sprite();
+update_status.SetZ(10);
+
+frame = 0;
+ready = 0;
+poodle_name = "";
+
+#------------------------------------------------------------------ helpers
+
+fun clamp01(x)
+  {
+    if (x < 0) return 0;
+    if (x > 1) return 1;
+    return x;
+  }
+
+fun seg(t, a, b)
+  {
+    return clamp01((t - a) / (b - a));
+  }
+
+fun ease_in_out(x)
+  {
+    x = clamp01(x);
+    return x * x * (3 - 2 * x);
+  }
+
+fun ease_out_back(x, k)
+  {
+    x = clamp01(x) - 1;
+    return 1 + (k + 1) * x * x * x + k * x * x;
+  }
+
+fun scaled(image, factor)
+  {
+    return image.Scale(Math.Max(1, Math.Int(image.GetWidth() * factor + 0.5)),
+                       Math.Max(1, Math.Int(image.GetHeight() * factor + 0.5)));
+  }
+
+# image scaled to px pixels wide
+fun width_to(image, px)
+  {
+    px = Math.Max(1, Math.Int(px + 0.5));
+    return image.Scale(px, Math.Max(1, Math.Int(image.GetHeight() * px / image.GetWidth() + 0.5)));
+  }
+
+# the same, remembered in cache for the next time that width comes up
+fun sized(cache, image, px)
+  {
+    px = Math.Max(1, Math.Int(px + 0.5));
+    if (!cache[px])
+      cache[px] = width_to(image, px);
+    return cache[px];
+  }
+
+# centre a sprite's image on (x, y)
+fun place(sprite, image, x, y, opacity)
+  {
+    sprite.SetImage(image);
+    sprite.SetX(Math.Int(x - image.GetWidth() / 2 + 0.5));
+    sprite.SetY(Math.Int(y - image.GetHeight() / 2 + 0.5));
+    sprite.SetOpacity(opacity);
+  }
+
+fun font(points)
+  {
+    return "Sans " + Math.Max(9, Math.Int(points * u + 0.5));
+  }
+
+fun text(string, red, green, blue, points)
+  {
+    return Image.Text(string, red, green, blue, 1, font(points), "center");
+  }
+
+#------------------------------------------------------------------- layout
+
+fun layout()
+  {
+    global.W = Window.GetWidth();
+    global.H = Window.GetHeight();
+    if (W < 1 || H < 1)
+      {
+        global.ready = 0;
+        return;
+      }
+    # every display is centred on the middle of the largest one
+    global.cx = W / 2;
+    global.cy = H / 2;
+    global.u = Math.Min(H / 1000, W / 1400);
+    if (u > 1.6)
+      local.set = "@2x";
+    else
+      local.set = "";
+    if (set != art)
+      load_art(set);
+    # r takes the art's pixels to the screen's
+    if (set == "@2x")
+      global.r = u / 2.88;
+    else
+      global.r = u / 1.44;
+
+    local.k = Math.Max(W / src.background.GetWidth(), H / src.background.GetHeight());
+    place(background, scaled(src.background, k), cx, cy, 1);
+
+    global.img.wordmark = scaled(src.wordmark, r);
+    global.cache.small = [];
+    global.cache.sleepy = [];
+    global.cache.shadow = [];
+    global.cache.heart = [];
+    global.cache.z = [];
+    global.poodle_px = -1;
+    global.ready = 1;
+
+    if (dialog.shown)
+      dialog_layout();
+    if (message_text != "")
+      display_message(message_text);
+  }
+
+#------------------------------------------------------------------ poodle
+
+# the poodle ("big", "small" or "sleepy") and its shadow, size units wide,
+# centred on (x, y). The small ones only breathe, so their few sizes are cached.
+fun show_poodle(name, size, x, y, opacity)
+  {
+    local.px = Math.Max(1, Math.Int(size * u + 0.5));
+    if (px != poodle_px || name != poodle_name)
+      {
+        global.poodle_px = px;
+        global.poodle_name = name;
+        # shadow.png is drawn around a 259px poodle
+        local.shadow_px = src.shadow.GetWidth() * px / 259.2;
+        if (name == "big")
+          {
+            global.poodle_scaled = src.poodle.Scale(px, px);
+            global.shadow_scaled = width_to(src.shadow, shadow_px);
+          }
+        else if (name == "small")
+          {
+            global.poodle_scaled = sized(cache.small, src.small, px);
+            global.shadow_scaled = sized(cache.shadow, src.shadow, shadow_px);
+          }
+        else
+          {
+            global.poodle_scaled = sized(cache.sleepy, src.sleepy, px);
+            global.shadow_scaled = sized(cache.shadow, src.shadow, shadow_px);
+          }
+      }
+    place(pood, poodle_scaled, x, y, opacity);
+    # the shadow sits a little low, as on the wallpaper
+    place(shadow, shadow_scaled, x, y + size * 0.041 * u, opacity);
+  }
+
+fun small_heart(k, size, x, y, opacity)
+  {
+    place(hearts[k], sized(cache.heart, src.heart_small, size * u), x, y, opacity);
+  }
+
+# the Game Mode animation, then breathing until boot is done
+fun awake(t)
+  {
+    # a heart pops in, then hands over to the poodle
+    local.hb = ease_out_back(seg(t, 0.30, 0.75), 2.4);
+    local.ho = 1 - seg(t, 0.85, 1.25);
+    if (hb > 0 && ho > 0)
+      {
+        local.hs = 240 * (0.30 * hb + 0.25 * seg(t, 0.75, 1.25));
+        place(big_heart, src.heart.Scale(Math.Max(1, Math.Int(hs * u)), Math.Max(1, Math.Int(hs * u))), cx, cy, ho);
+      }
+    else
+      big_heart.SetOpacity(0);
+
+    # the poodle bounces in, breathes, then shrinks up over the wordmark
+    local.settle = ease_in_out(seg(t, 2.55, 3.25));
+    local.size = 360 * (0.3 + 0.7 * ease_out_back(seg(t, 0.75, 1.45), 1.9));
+    size = size * (1 - settle) + 210 * settle;
+    size = size * (1 + 0.015 * Math.Sin(2 * Math.Pi * (t - 1.45) / 1.1) * seg(t, 1.45, 1.7) * (1 - settle));
+    # and once settled keeps breathing, slower
+    size = size * (1 + 0.012 * Math.Sin(2 * Math.Pi * (t - 3.25) / 2.4) * seg(t, 3.25, 3.4));
+    local.y = cy - 65 * u * settle;
+    local.alpha = ease_in_out(seg(t, 0.75, 1.15));
+    if (alpha > 0)
+      {
+        if (settle < 1)
+          show_poodle("big", size, cx, y, alpha);
+        else
+          show_poodle("small", size, cx, y, alpha);
+      }
+    else
+      {
+        pood.SetOpacity(0);
+        shadow.SetOpacity(0);
+      }
+
+    # little hearts drift up while the poodle is big ...
+    if (t < 3)
+      {
+        for (local.k = 0; k < 4; k++)
+          {
+            local.ft = seg(t, 1.45 + intro_hearts[k].delay * 0.6, 2.45 + intro_hearts[k].delay * 0.6);
+            if (ft > 0 && ft < 1)
+              small_heart(k, 240 * (0.12 + 0.05 * ft),
+                          cx + intro_hearts[k].dx * 260 * u,
+                          cy + (intro_hearts[k].dy * 230 - 90 * ft) * u,
+                          Math.Sin(Math.Pi * ft) * (1 - settle));
+            else
+              hearts[k].SetOpacity(0);
+          }
+      }
+    # ... and now and then, one at a time, once it has settled
+    else
+      {
+        for (local.k = 0; k < 2; k++)
+          {
+            local.since = t - 3.6 - k * 1.4;
+            local.ft = (since % 2.8) / 1.8;
+            local.side = 2 * k - 1;
+            if (since > 0 && ft < 1)
+              small_heart(k, 26 + 8 * ft,
+                          cx + side * (82 + 16 * ft) * u,
+                          cy - (150 + 60 * ft) * u,
+                          0.9 * Math.Sin(Math.Pi * ft));
+            else
+              hearts[k].SetOpacity(0);
+          }
+        hearts[2].SetOpacity(0);
+        hearts[3].SetOpacity(0);
+      }
+
+    # the wordmark fades in under the poodle
+    local.wa = ease_in_out(seg(t, 3.15, 3.55));
+    place(wordmark, img.wordmark, cx, cy + (92 - 14 * wa) * u, wa);
+  }
+
+intro_hearts[0].dx = -0.55; intro_hearts[0].dy = 0.10; intro_hearts[0].delay = 0.0;
+intro_hearts[1].dx = 0.58;  intro_hearts[1].dy = -0.05; intro_hearts[1].delay = 0.25;
+intro_hearts[2].dx = -0.15; intro_hearts[2].dy = -0.55; intro_hearts[2].delay = 0.5;
+intro_hearts[3].dx = 0.35;  intro_hearts[3].dy = 0.45; intro_hearts[3].delay = 0.7;
+
+# the poodle naps while z's float up from its head
+fun nap(t)
+  {
+    local.fade = ease_in_out(seg(t, 0, 0.6));
+    local.size = 220 * (1 + 0.02 * Math.Sin(2 * Math.Pi * t / 3.2));
+    show_poodle("sleepy", size, cx, cy - 65 * u, fade);
+    place(wordmark, img.wordmark, cx, cy + 78 * u, fade);
+    for (local.k = 0; k < 3; k++)
+      {
+        local.since = t - 0.4 - k * 0.8;
+        local.ft = (since % 2.4) / 2.4;
+        if (since > 0)
+          place(zs[k], sized(cache.z, src.z, (16 + 18 * ft) / 36 * r * src.z.GetWidth()),
+                cx + (70 + 60 * ft + 8 * Math.Sin(2 * Math.Pi * ft)) * u,
+                cy - (150 + 100 * ft) * u,
+                fade * Math.Sin(Math.Pi * ft));
+        else
+          zs[k].SetOpacity(0);
+      }
+  }
+
+fun animate(t)
+  {
+    if (napping)
+      nap(t);
+    else if (mode == "boot")
+      awake(t);
+    else
+      # updates and the like: skip straight to the settled poodle
+      awake(t + 3.6);
+  }
+
+fun refresh_callback()
+  {
+    global.frame = frame + 1;
+    if (!ready)
+      return;
+    animate(frame / FPS);
+    if (dialog.shown && Plymouth.GetCapslockState() != dialog.caps_on)
+      show_caps();
+  }
+
+Plymouth.SetRefreshFunction(refresh_callback);
+
+#------------------------------------------------------- password and questions
+
+fun dialog_layout()
+  {
+    local.lock = scaled(src.lock, r);
+    local.entry = scaled(src.entry, r);
+    local.gap = 12 * u;
+    local.left = cx - (lock.GetWidth() + gap + entry.GetWidth()) / 2;
+    global.dialog.y = cy + 270 * u;
+    global.dialog.entry_x = left + lock.GetWidth() + gap + entry.GetWidth() / 2;
+    global.dialog.entry_w = entry.GetWidth();
+    place(dialog.lock, lock, left + lock.GetWidth() / 2, dialog.y, 1);
+    place(dialog.entry, entry, dialog.entry_x, dialog.y, 1);
+    global.dialog.bullet = scaled(src.bullet, r);
+    dialog_update();
+  }
+
+fun dialog_update()
+  {
+    if (dialog.prompt != "")
+      place(dialog.prompt_sprite, text(dialog.prompt, 0.345, 0.192, 0.227, 14), cx, cy + 225 * u, 1);
+    else
+      dialog.prompt_sprite.SetOpacity(0);
+
+    # typed characters show as little hearts; answers to questions show as text
+    local.shown = Math.Min(dialog.bullets, 12);
+    local.step = 21 * u;
+    for (local.k = 0; k < 12; k++)
+      {
+        if (k < shown)
+          place(dialog.bullets_sprites[k], dialog.bullet,
+                dialog.entry_x - (shown - 1) * step / 2 + k * step, dialog.y, 1);
+        else
+          dialog.bullets_sprites[k].SetOpacity(0);
+      }
+    if (dialog.answer != "")
+      place(dialog.answer_sprite, text(dialog.answer, 0.345, 0.192, 0.227, 14), dialog.entry_x, dialog.y, 1);
+    else
+      dialog.answer_sprite.SetOpacity(0);
+
+    show_caps();
+  }
+
+fun show_caps()
+  {
+    global.dialog.caps_on = Plymouth.GetCapslockState();
+    if (dialog.caps_on)
+      place(dialog.caps, text("Caps Lock is on", 0.769, 0.149, 0.294, 12), dialog.entry_x, cy + 312 * u, 1);
+    else
+      dialog.caps.SetOpacity(0);
+  }
+
+fun dialog_show(prompt, bullets, answer)
+  {
+    if (!dialog.made)
+      {
+        global.dialog.made = 1;
+        global.dialog.lock = Sprite();
+        global.dialog.entry = Sprite();
+        global.dialog.prompt_sprite = Sprite();
+        global.dialog.answer_sprite = Sprite();
+        global.dialog.caps = Sprite();
+        dialog.lock.SetZ(10);
+        dialog.entry.SetZ(10);
+        dialog.prompt_sprite.SetZ(10);
+        dialog.answer_sprite.SetZ(11);
+        dialog.caps.SetZ(10);
+        for (local.k = 0; k < 12; k++)
+          {
+            global.dialog.bullets_sprites[k] = Sprite();
+            dialog.bullets_sprites[k].SetZ(11);
+          }
+      }
+    global.dialog.prompt = prompt;
+    global.dialog.bullets = bullets;
+    global.dialog.answer = answer;
+    global.dialog.shown = 1;
+    if (ready)
+      dialog_layout();
+  }
+
+fun display_password_callback(prompt, bullets)
+  {
+    dialog_show(prompt, bullets, "");
+  }
+
+fun display_question_callback(prompt, entry_text)
+  {
+    dialog_show(prompt, 0, entry_text);
+  }
+
+fun display_normal_callback()
+  {
+    if (!dialog.shown)
+      return;
+    global.dialog.shown = 0;
+    dialog.lock.SetOpacity(0);
+    dialog.entry.SetOpacity(0);
+    dialog.prompt_sprite.SetOpacity(0);
+    dialog.answer_sprite.SetOpacity(0);
+    dialog.caps.SetOpacity(0);
+    for (local.k = 0; k < 12; k++)
+      dialog.bullets_sprites[k].SetOpacity(0);
+  }
+
+Plymouth.SetDisplayPasswordFunction(display_password_callback);
+Plymouth.SetDisplayQuestionFunction(display_question_callback);
+Plymouth.SetDisplayNormalFunction(display_normal_callback);
+
+#---------------------------------------------------------- messages and the rest
+
+fun display_message(string)
+  {
+    global.message_text = string;
+    if (ready && string != "")
+      place(message, text(string, 0.345, 0.192, 0.227, 13), cx, cy + 365 * u, 1);
+  }
+
+fun hide_message(string)
+  {
+    if (string != message_text)
+      return;
+    global.message_text = "";
+    message.SetOpacity(0);
+  }
+
+Plymouth.SetDisplayMessageFunction(display_message);
+Plymouth.SetHideMessageFunction(hide_message);
+
+fun system_update_callback(progress)
+  {
+    if (ready)
+      place(update_status, text(Math.Int(progress) + "%", 0.345, 0.192, 0.227, 13), cx, cy + 150 * u, 1);
+  }
+
+Plymouth.SetSystemUpdateFunction(system_update_callback);
+
+fun hotplug_callback()
+  {
+    layout();
+  }
+
+Plymouth.SetDisplayHotplugFunction(hotplug_callback);
+
+layout();

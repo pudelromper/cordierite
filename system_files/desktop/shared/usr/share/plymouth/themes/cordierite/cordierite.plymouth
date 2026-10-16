@@ -1,0 +1,8 @@
+[Plymouth Theme]
+Name=Cordierite
+Description=The Cordierite poodle wakes up while the system starts and naps while it shuts down
+ModuleName=script
+
+[script]
+ImageDir=/usr/share/plymouth/themes/cordierite
+ScriptFile=/usr/share/plymouth/themes/cordierite/cordierite.script

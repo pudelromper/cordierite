@@ -49,10 +49,23 @@ if ! $SKIP_VIDEOS; then
         "steam_os_suspend.webm"
     )
 
+    # The Bazzite videos earlier Cordierite images shipped, by SHA-256. A copy of one of these was
+    # put here by this script rather than chosen, so it is brought up to date.
+    STALE_VIDEOS=(
+        b170b9c60fac4249de4f1d342858f15991541804b85d6db2c3e29e4038170d1a # bazzite.webm
+        3b7402b1b5ed2db218b5e0ad9517c359ddb15f21dddbb36cbae43fc6cd093021 # bazzite-oled.webm
+        61301a6ace3171b762dc34cbb70c9e126af8b249ca2790b1641603cd28c89a73 # bazzite-suspend.webm
+        612e01f2d5430eea98e5da7f9350ae42a2c79f70f533518f104c7187a0814925 # bazzite-suspend-oled.webm
+    )
+    stale() {
+        local SUM
+        SUM=$(sha256sum < "$1") && [[ " ${STALE_VIDEOS[*]} " == *" ${SUM%% *} "* ]]
+    }
+
     # Copy the startup video to all locations
     for STARTUP in "${STARTUP_LOCATIONS[@]}"; do
         LOCATION_STARTUP="$OVRDIR/$STARTUP"
-        if [ ! -f "$LOCATION_STARTUP" ]; then
+        if [ ! -f "$LOCATION_STARTUP" ] || stale "$LOCATION_STARTUP"; then
             cp $VIDEO_STARTUP $LOCATION_STARTUP
         fi
     done
@@ -60,8 +73,12 @@ if ! $SKIP_VIDEOS; then
     # Copy the suspend video to all locations
     for SUSPEND in "${SUSPEND_LOCATIONS[@]}"; do
         LOCATION_SUSPEND="$OVRDIR/$SUSPEND"
-        if [ ! -f "$LOCATION_SUSPEND" ]; then
+        if [ ! -f "$LOCATION_SUSPEND" ] || stale "$LOCATION_SUSPEND"; then
             cp $VIDEO_SUSPEND $LOCATION_SUSPEND
         fi
     done
+
+    # Strike the singing bowl afresh into the startup videos, in the background so Steam
+    # doesn't wait for it
+    nice -n 19 /usr/libexec/cordierite-singing-bowl startup "$VIDEO_STARTUP" "${STARTUP_LOCATIONS[@]/#/$OVRDIR/}" &> /dev/null &
 fi

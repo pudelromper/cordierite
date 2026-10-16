@@ -78,3 +78,6 @@ if grep -q '^IMAGE_ID=' /usr/lib/os-release; then
 else
   echo "IMAGE_ID=\"$IMAGE_NAME-$VERSION_TAG\"" >> /usr/lib/os-release
 fi
+
+# Swap Bazzite artwork that packages installed for the Cordierite poodle
+"$(dirname "$0")/cordierite-branding"

@@ -107,6 +107,43 @@ command:
     stdout:
       - "/^(OK|SKIP):/"
 
+  # The singing bowl is struck afresh at boot and in Game Mode's startup video, which needs pw-play,
+  # ffmpeg, and the shipped startup videos to carry the bowl's title.
+  singing_bowl_strikes:
+    exec: |
+      sh -lc '
+      bowl=/usr/libexec/cordierite-singing-bowl
+      if ! grep -qx "Exec=$bowl boot" /etc/xdg/autostart/cordierite-singing-bowl.desktop; then
+        echo "FAIL: no autostart entry rings the singing bowl at boot"
+        exit 1
+      fi
+      if ! command -v pw-play >/dev/null; then
+        echo "FAIL: pw-play is missing, so the singing bowl cannot ring at boot"
+        exit 1
+      fi
+      for video in /usr/share/ublue-os/bazzite/bazzite.webm /usr/share/ublue-os/bazzite/bazzite-oled.webm; do
+        if ! grep -qa "Cordierite singing bowl" "$video"; then
+          echo "FAIL: $video does not carry the singing bowl title, so it would never be struck afresh"
+          exit 1
+        fi
+      done
+      dir=$(mktemp -d)
+      if ! "$bowl" wav "$dir/boot.wav" || [ ! -s "$dir/boot.wav" ]; then
+        echo "FAIL: cordierite-singing-bowl could not strike the bowl for boot"
+        exit 1
+      fi
+      if ! "$bowl" video /usr/share/ublue-os/bazzite/bazzite.webm "$dir/startup.webm" ||
+         ! grep -qa "Cordierite singing bowl" "$dir/startup.webm"; then
+        echo "FAIL: cordierite-singing-bowl could not strike the bowl into the startup video"
+        exit 1
+      fi
+      echo "OK: the singing bowl strikes for boot and for the startup video"
+      '
+    exit-status: 0
+    stdout:
+      - "/^OK:/"
+    timeout: 60000
+
   # ryzen_smu backs TDP control, which deck images depend on.
   deck_has_ryzen_smu:
     exec: |

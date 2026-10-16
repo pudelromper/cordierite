@@ -273,12 +273,9 @@ dnf -yq remove steam lutris bazaar waydroid || :
 # Don't check for verified image
 rm -vf /etc/profile.d/verify_motd.sh
 
-(
-    wallpaper_url=https://github.com/ublue-os/bazzite/raw/refs/heads/main/press_kit/art/Convergence_Wallpaper_DX.jxl
-    wallpaper_file=/usr/share/wallpapers/convergence.jxl
-    wget -nv -O "$wallpaper_file" "$wallpaper_url"
-    rm -f /usr/share/backgrounds/default.xml
-)
+# The image's convergence.jxl, which the desktop's wallpaper settings point at,
+# is already the Cordierite poodle wallpaper, so there's nothing to download
+rm -f /usr/share/backgrounds/default.xml
 
 # Enable on-screen keyboard
 if [[ $imageref == *-deck* ]]; then

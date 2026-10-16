@@ -13,7 +13,7 @@ if ((SHLVL > 1)); then
     }
 else
     function echoerr() {
-        zenity --error --icon=bazzite-logo --text="$*"
+        zenity --error --icon=cordierite-logo-icon --text="$*"
     }
 fi
 
