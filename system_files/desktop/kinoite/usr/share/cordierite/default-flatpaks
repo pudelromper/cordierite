@@ -11,7 +11,7 @@ app/com.github.tchx84.Flatseal/x86_64/stable
 app/com.github.Matoking.protontricks/x86_64/stable
 app/io.github.flattool.Warehouse/x86_64/stable
 app/com.vysp3r.ProtonPlus/x86_64/stable
-runtime/org.freedesktop.Platform.VulkanLayer.vkBasalt/x86_64/23.08
+runtime/org.freedesktop.Platform.VulkanLayer.vkBasalt/x86_64/25.08
 app/org.zotero.Zotero/x86_64/stable
 app/org.kde.konsole/x86_64/stable
 app/org.kde.ark/x86_64/stable

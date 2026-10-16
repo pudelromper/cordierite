@@ -1,0 +1,55 @@
+#!/usr/bin/bash
+#
+# Install Cordierite's default Flatpaks after an install or rebase.
+#
+# ISOs no longer embed Flatpaks, so these are downloaded from Flathub on the
+# installed system. The first boot often has no network yet (Wi-Fi is set up
+# after login), so this exits non-zero until every ref is installed and
+# systemd retries it; the marker is written only once nothing is missing.
+
+set -uo pipefail
+
+DEFAULT_FLATPAKS_LIST="/usr/share/cordierite/default-flatpaks"
+MARKER="/etc/cordierite/default_flatpaks_installed"
+
+if [[ ! -f "$DEFAULT_FLATPAKS_LIST" ]]; then
+  echo "No default Flatpak list at $DEFAULT_FLATPAKS_LIST, nothing to do."
+  exit 0
+fi
+
+if ! curl -fsS --max-time 15 -o /dev/null https://dl.flathub.org/repo/flathub.flatpakrepo; then
+  echo "Flathub is not reachable yet, will retry."
+  exit 1
+fi
+
+flatpak remote-add --if-not-exists --system flathub /etc/flatpak/remotes.d/flathub.flatpakrepo || :
+flatpak remote-modify --system --enable flathub || :
+
+missing=()
+while IFS= read -r ref || [[ -n "$ref" ]]; do
+  ref="${ref%%#*}"
+  ref="${ref//[[:space:]]/}"
+  [[ -z "$ref" ]] && continue
+  if flatpak info --system "$ref" &>/dev/null; then
+    continue
+  fi
+  missing+=("$ref")
+done <"$DEFAULT_FLATPAKS_LIST"
+
+failed=()
+for ref in "${missing[@]}"; do
+  echo "Installing $ref..."
+  if ! flatpak install --system --noninteractive --assumeyes flathub "$ref"; then
+    echo "Failed to install $ref"
+    failed+=("$ref")
+  fi
+done
+
+if [[ ${#failed[@]} -gt 0 ]]; then
+  echo "Failed to install ${#failed[@]} Flatpak(s): ${failed[*]}. Will retry."
+  exit 1
+fi
+
+mkdir -p "$(dirname "$MARKER")"
+touch "$MARKER"
+echo "Default Flatpaks installed."

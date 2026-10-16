@@ -4,11 +4,14 @@ ColorScheme=Cordierite
 [kdeglobals][KDE]
 widgetStyle=breeze
 
+[kdeglobals][Icons]
+Theme=breeze
+
 [plasmarc][Theme]
 name=default
 
 [Wallpaper]
-Image=dog_rest.jpg
+Image=Cordierite
 
 [kcminputrc][Mouse]
 cursorTheme=breeze_cursors

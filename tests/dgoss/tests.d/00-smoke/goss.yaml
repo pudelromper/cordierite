@@ -13,6 +13,14 @@ command:
     exec: "/usr/bin/bash -n /usr/libexec/bazzite-user-setup"
     exit-status: 0
 
+  cordierite_default_flatpaks_has_valid_shell_syntax:
+    exec: "/usr/bin/bash -n /usr/libexec/cordierite-default-flatpaks"
+    exit-status: 0
+
+  cordierite_default_flatpaks_service_is_enabled:
+    exec: "systemctl is-enabled cordierite-default-flatpaks.service"
+    exit-status: 0
+
   bazzite_privileged_user_setup_has_valid_shell_syntax:
     exec: "/usr/bin/bash -n /usr/libexec/bazzite-privileged-user-setup"
     exit-status: 0
@@ -170,6 +178,74 @@ command:
     stdout:
       - "/^(OK|SKIP):/"
 
+  desktop_images_default_to_cordierite_theme:
+    exec: |
+      sh -lc '
+      info=/usr/share/ublue-os/image-info.json
+      name=$(sed -n "s/.*\"image-name\"[[:space:]]*:[[:space:]]*\"\([^\"]*\)\".*/\1/p" "$info" 2>/dev/null)
+      if [ -z "$name" ]; then
+        name=$(. /usr/lib/os-release 2>/dev/null; printf "%s" "$VARIANT_ID")
+      fi
+      if [ -z "$name" ]; then
+        echo "FAIL: unable to determine image name from $info or /usr/lib/os-release"
+        exit 1
+      fi
+      case "$name" in
+        *deck*) echo "SKIP: $name is a deck image, it keeps the Vapor theme" ; exit 0 ;;
+      esac
+      if ! grep -qx "LookAndFeelPackage=com.cordierite.desktop" /etc/xdg/kdeglobals; then
+        echo "FAIL: /etc/xdg/kdeglobals does not select com.cordierite.desktop"
+        exit 1
+      fi
+      for f in /usr/share/color-schemes/Cordierite.colors \
+               /usr/share/plasma/look-and-feel/com.cordierite.desktop/metadata.json \
+               /usr/share/plasma/look-and-feel/com.cordierite.desktop/contents/splash/images/busywidget.svgz; do
+        if [ ! -f "$f" ]; then
+          echo "FAIL: $f is missing"
+          exit 1
+        fi
+      done
+      echo "OK: $name defaults to the Cordierite look-and-feel"
+      '
+    exit-status: 0
+    stdout:
+      - "/^(OK|SKIP):/"
+
+  steam_autostarts_only_on_deck_images:
+    exec: |
+      sh -lc '
+      info=/usr/share/ublue-os/image-info.json
+      name=$(sed -n "s/.*\"image-name\"[[:space:]]*:[[:space:]]*\"\([^\"]*\)\".*/\1/p" "$info" 2>/dev/null)
+      if [ -z "$name" ]; then
+        name=$(. /usr/lib/os-release 2>/dev/null; printf "%s" "$VARIANT_ID")
+      fi
+      if [ -z "$name" ]; then
+        echo "FAIL: unable to determine image name from $info or /usr/lib/os-release"
+        exit 1
+      fi
+      case "$name" in
+        *deck*)
+          if [ ! -f /etc/xdg/autostart/steam.desktop ]; then
+            echo "FAIL: $name is a deck image but Steam does not autostart"
+            exit 1
+          fi
+          echo "OK: Steam autostarts on $name"
+          ;;
+        *)
+          for f in /etc/skel/.config/autostart/steam.desktop /etc/xdg/autostart/steam.desktop; do
+            if [ -e "$f" ]; then
+              echo "FAIL: $f makes Steam open at login on $name"
+              exit 1
+            fi
+          done
+          echo "OK: Steam does not autostart on $name"
+          ;;
+      esac
+      '
+    exit-status: 0
+    stdout:
+      - "/^OK:/"
+
   kernel_modules_match_uname:
     exec: |
       sh -lc '
@@ -226,4 +302,6 @@ command:
 
 file:
   /etc/os-release:
+    exists: true
+  /usr/share/applications/io.github.kolunmi.Bazaar.desktop:
     exists: true
