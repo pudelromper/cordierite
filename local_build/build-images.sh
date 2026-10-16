@@ -27,6 +27,12 @@ WORK_DIR="$(mktemp -d "${CORDIERITE_STATE_DIR}/build-XXXXXX")"
 trap 'rm -rf "${WORK_DIR}"' EXIT
 cd "${PROJECT_ROOT}"
 
+# build.yml checks out with submodules: recursive, and firmware/ is a submodule.
+# Sync them here too, so a fresh clone or release.sh's plain git pull cannot
+# build with missing or stale submodule content.
+log "syncing git submodules"
+git submodule update --init --recursive
+
 #
 # Version tag for the whole run (build.yml "version" job)
 #
@@ -107,8 +113,13 @@ ARGS
     if [[ -n "${GITHUB_TOKEN:-}" ]]; then
         secret=(--secret "id=GITHUB_TOKEN,env=GITHUB_TOKEN")
     fi
+    # label=disable: the Containerfile bind-mounts firmware/, cosign.pub and the
+    # KDE presets straight from the build context, which SELinux keeps containers
+    # from reading. build.yml's Ubuntu runners have no SELinux, and build-iso.sh
+    # runs its podman steps the same way.
     log "${image}: buildah build"
     buildah build \
+        --security-opt label=disable \
         --target "${CONTAINER_TARGET}" \
         --build-arg-file "${args}" \
         "${secret[@]}" \
@@ -141,6 +152,8 @@ LABELS
     buildah unshare bash -euo pipefail -c '
         container=$(buildah from "$1")
         mnt=$(buildah mount "$container")
+        # An empty mount point would aim the rm below at the host /run and /tmp.
+        [[ -n "$mnt" && "$mnt" != / ]] || { echo "rechunk: buildah mount returned \"$mnt\"" >&2; exit 1; }
         rm -rf "$mnt"/run/.* "$mnt"/run/* "$mnt"/tmp/.* "$mnt"/tmp/* || true
         buildah umount "$container"
         buildah commit --identity-label=false --rm "$container" "$1"
@@ -226,8 +239,17 @@ LABELS
 
 failed=()
 for image in "${images[@]}"; do
-    if ! build_one "${image}"; then
-        log "${image}: FAILED"
+    # Not `if ! build_one`: bash ignores set -e inside a function called as a
+    # condition, so a failed step would run on and the image would count as built.
+    set +e
+    (
+        set -e
+        build_one "${image}"
+    )
+    rc=$?
+    set -e
+    if [[ ${rc} -ne 0 ]]; then
+        log "${image}: FAILED (exit ${rc})"
         failed+=("${image}")
     fi
 done
@@ -235,4 +257,8 @@ done
 if [[ ${#failed[@]} -gt 0 ]]; then
     die "failed images: ${failed[*]}"
 fi
-log "all images published with version ${RUN_VERSION}"
+if [[ "${CORDIERITE_NO_PUSH:-0}" == "1" ]]; then
+    log "all images built with version ${RUN_VERSION} (CORDIERITE_NO_PUSH=1, nothing pushed)"
+else
+    log "all images published with version ${RUN_VERSION}"
+fi
