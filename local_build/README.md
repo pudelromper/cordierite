@@ -19,6 +19,9 @@ and `installer/` tree.
 - Fedora (or anything with recent podman) with: `podman buildah skopeo jq git cosign`,
   plus `rclone` for ISO uploads and `goss`/`dgoss` for the smoke tests.
   `rpm-ostree` is not needed on the host; rechunking runs inside the image.
+- SELinux can stay enforcing. `build-images.sh` runs `buildah build` with
+  `--security-opt label=disable` because the Containerfile bind-mounts files
+  straight from the checkout, which SELinux would otherwise block.
 - Roughly 100 GB free under `CORDIERITE_STATE_DIR` and the container storage.
   Each image is ~10 GB, rechunking needs that again, and the DNF cache mounts
   stay warm between runs on a persistent box.
@@ -29,9 +32,10 @@ and `installer/` tree.
 
 ## One-time setup
 
-1. Clone the repo where the units expect it:
-   `git clone https://github.com/pudelromper/cordierite /opt/cordierite`
-   (or adjust `WorkingDirectory`/`ExecStart` in the units).
+1. Clone the repo, with its submodules, where the units expect it:
+   `git clone --recurse-submodules https://github.com/pudelromper/cordierite /opt/cordierite`
+   (or adjust `WorkingDirectory`/`ExecStart` in the units). `firmware/` is a
+   submodule; `build-images.sh` also syncs submodules before every build.
 2. Configuration:
    `install -d -m 0750 /etc/cordierite && cp local_build/build.env.example /etc/cordierite/build.env`
    then edit registry, vendor and paths.
@@ -64,6 +68,8 @@ cordierite` by hand. It builds and rechunks one image and leaves it in local
 storage as `localhost/cordierite-chunked-cordierite` without touching the
 registry. Boot-test it with `podman run --rm -it <that image> bash` or by
 rebasing a VM to `ostree-unverified-image:containers-storage:...`.
+As a non-root user, also set `CORDIERITE_STATE_DIR` to a writable directory
+such as `~/.local/share/cordierite`; the default `/var/lib/cordierite` needs root.
 
 ## Versioning and tags
 

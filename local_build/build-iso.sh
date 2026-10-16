@@ -107,8 +107,17 @@ build_one() {
 
 failed=()
 for image in "${images[@]}"; do
-    if ! build_one "${image}"; then
-        log "${image}: FAILED"
+    # Subshell with set -e rather than `if ! build_one`, which would ignore
+    # set -e inside it (see build-images.sh).
+    set +e
+    (
+        set -e
+        build_one "${image}"
+    )
+    rc=$?
+    set -e
+    if [[ ${rc} -ne 0 ]]; then
+        log "${image}: FAILED (exit ${rc})"
         failed+=("${image}")
     fi
 done
